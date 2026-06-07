@@ -21,11 +21,10 @@
     /* ── Logo ── */
     .logo{
       font-family: 'Press Start 2P', monospace;
-      font-size: 9px;
-      line-height: 1.6;
+      font-size: 13px;
+      line-height: 1;
       color: #999;
       letter-spacing: 0;
-      text-transform: uppercase;
       padding: 0;
       margin-bottom: 48px;
       -webkit-font-smoothing: none;
@@ -47,7 +46,7 @@
       color: inherit;
     }
     .card:hover .preview{ transform: translateY(-3px); }
-    .card:hover .access{ color: #1a1a1a; }
+    .card:hover .title{ color: #1a1a1a; }
 
     /* ── Screenshot preview ── */
     .preview{
@@ -59,6 +58,17 @@
       border: 1px solid rgba(0,0,0,0.06);
       display: flex; align-items: center; justify-content: center;
       position: relative;
+    }
+
+    /* ── Title below card ── */
+    .title{
+      display: block;
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #999;
+      letter-spacing: 0.02em;
+      transition: color 0.2s;
     }
 
     /* ── Golf Bot thumbnail ── */
@@ -113,18 +123,6 @@
       display:flex;align-items:center;justify-content:center;font-size:7px;color:#64748b;
     }
 
-    /* ── Access button ── */
-    .access{
-      display: block;
-      text-align: center;
-      margin-top: 10px;
-      font-size: 13px;
-      font-weight: 500;
-      color: #999;
-      letter-spacing: 0.02em;
-      transition: color 0.2s;
-    }
-
     /* ── Responsive ── */
     @media(max-width:640px){
       body{padding:16px}
@@ -135,7 +133,7 @@
 </head>
 <body>
 
-  <div class="logo">Always<br>Be Young</div>
+  <div class="logo">Always Be Young</div>
 
   <div class="grid">
 
@@ -163,7 +161,7 @@
         </div>
         <div class="mini-btn">BLOQUEAR</div>
       </div>
-      <span class="access">Acceso</span>
+      <span class="title">Reserva automática de tee-times</span>
     </a>
 
     <!-- 🧮 Stableford Calculator -->
@@ -192,7 +190,7 @@
           <span class="mini-cell">3</span>
         </div>
       </div>
-      <span class="access">Acceso</span>
+      <span class="title">Puntuación Stableford · Lomas Bosque</span>
     </a>
 
   </div>
