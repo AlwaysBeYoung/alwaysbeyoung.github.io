@@ -123,6 +123,29 @@
       display:flex;align-items:center;justify-content:center;font-size:7px;color:#64748b;
     }
 
+    /* ── Sorteo thumbnail ── */
+    .preview-sorteo{
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .preview-sorteo .sorteo-display{
+      text-align: center;
+    }
+    .preview-sorteo .sorteo-names{
+      font-size: 11px; color: #999; margin-bottom: 12px;
+      display: flex; gap: 14px; justify-content: center;
+    }
+    .preview-sorteo .sorteo-result{
+      font-size: 32px; font-weight: 800;
+      color: #1a1a1a;
+      animation: mini-bounce 0.8s ease infinite;
+    }
+    @keyframes mini-bounce{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(-8px)}
+    }
+
     /* ── Responsive ── */
     @media(max-width:640px){
       body{padding:16px}
@@ -191,6 +214,19 @@
         </div>
       </div>
       <span class="title">Puntuación Stableford · Lomas Bosque</span>
+    </a>
+
+    <!-- 🎲 Sorteo de Salidas -->
+    <a class="card" href="/sorteo/" target="_blank" rel="noopener">
+      <div class="preview preview-sorteo">
+        <div class="sorteo-display">
+          <div class="sorteo-names">
+            <span>Ana</span><span>Luis</span><span>Marta</span><span>Juan</span>
+          </div>
+          <div class="sorteo-result">🏆</div>
+        </div>
+      </div>
+      <span class="title">Sorteador de salidas al tee</span>
     </a>
 
   </div>

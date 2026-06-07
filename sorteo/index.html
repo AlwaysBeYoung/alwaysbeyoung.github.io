@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Sorteador de Salidas — Always Be Young</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      color: #1a1a1a;
+      background: #fafaf8;
+      min-height: 100dvh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 24px 20px;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none; -webkit-user-select: none;
+    }
+
+    /* ── Header ── */
+    .header{
+      width: 100%; max-width: 480px;
+      margin-bottom: 36px;
+    }
+    .back{
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      color: #bbb;
+      text-decoration: none;
+      letter-spacing: 0.5px;
+    }
+    .back:hover{color:#666}
+
+    /* ── Main container ── */
+    .main{
+      width: 100%; max-width: 480px;
+      display: flex; flex-direction: column; gap: 28px;
+    }
+
+    /* ── Players list ── */
+    .players-section{display:flex;flex-direction:column;gap:10px}
+    .player-row{
+      display: flex; align-items: center; gap: 10px;
+    }
+    .player-input{
+      flex: 1;
+      height: 48px;
+      padding: 0 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: inherit;
+      background: #fff;
+      color: #1a1a1a;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .player-input:focus{border-color:#999}
+    .player-input::placeholder{color:#ccc}
+    .btn-remove{
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid #e0e0e0;
+      background: #fff;
+      color: #ccc;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-remove:hover{color:#f87171;border-color:#f87171}
+    .btn-add{
+      align-self: flex-start;
+      background: none; border: none;
+      color: #999; font-size: 14px; font-family: inherit;
+      cursor: pointer; padding: 6px 0;
+      transition: color 0.2s;
+    }
+    .btn-add:hover{color:#1a1a1a}
+
+    /* ── SORTEAR button ── */
+    .btn-sortear{
+      width: 100%;
+      height: 56px;
+      border-radius: 12px;
+      border: none;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: inherit;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-sortear:hover{background:#333}
+    .btn-sortear:active{transform:scale(0.97)}
+    .btn-sortear:disabled{
+      background:#e0e0e0;color:#999;cursor:not-allowed;
+    }
+
+    /* ── Display screen ── */
+    .display{
+      width: 100%;
+      aspect-ratio: 2/1;
+      max-height: 220px;
+      border-radius: 16px;
+      background: #fff;
+      border: 1px solid #e8e8e8;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    .display-text{
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #1a1a1a;
+      transition: transform 0.06s ease;
+    }
+    .display-text.spinning{
+      animation: flicker 0.08s infinite;
+    }
+    @keyframes flicker{
+      0%,100%{opacity:1}
+      50%{opacity:0.6}
+    }
+
+    /* ── Results ── */
+    .results{
+      display: flex; flex-direction: column; gap: 8px;
+      opacity: 0; transform: translateY(10px);
+      transition: all 0.4s ease;
+    }
+    .results.show{
+      opacity: 1; transform: translateY(0);
+    }
+    .result-row{
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      background: #fff;
+      border-radius: 10px;
+      border: 1px solid #e8e8e8;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    .result-row.first{
+      border-color: #fbbf24;
+      background: #fffbeb;
+      font-weight: 700;
+    }
+    .result-num{
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #f0f0f0;
+      color: #999;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .result-row.first .result-num{
+      background: #fbbf24;
+      color: #1a1a1a;
+    }
+    .result-name{flex:1}
+    .result-emoji{font-size:20px}
+
+    /* ── Reset button ── */
+    .btn-reset{
+      background: none; border: none;
+      color: #999; font-size: 13px; font-family: inherit;
+      cursor: pointer; padding: 4px 0;
+      transition: color 0.2s;
+      text-align: center;
+    }
+    .btn-reset:hover{color:#1a1a1a}
+
+    /* ── Responsive ── */
+    @media(max-width:400px){
+      .display-text{font-size:36px}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <a href="/" class="back">← Always Be Young</a>
+  </header>
+
+  <div class="main">
+
+    <!-- Players -->
+    <div class="players-section" id="playersContainer">
+      <div class="player-row">
+        <input class="player-input" type="text" placeholder="Jugador 1" maxlength="20" autocomplete="off">
+        <button class="btn-remove" aria-label="Eliminar">×</button>
+      </div>
+      <div class="player-row">
+        <input class="player-input" type="text" placeholder="Jugador 2" maxlength="20" autocomplete="off">
+        <button class="btn-remove" aria-label="Eliminar">×</button>
+      </div>
+    </div>
+
+    <button class="btn-add" id="btnAdd">+ Añadir jugador</button>
+
+    <!-- Sortear button -->
+    <button class="btn-sortear" id="btnSortear" disabled>SORTEAR</button>
+
+    <!-- Display -->
+    <div class="display">
+      <span class="display-text" id="displayText">👆</span>
+    </div>
+
+    <!-- Results -->
+    <div class="results" id="results"></div>
+
+    <button class="btn-reset" id="btnReset" style="display:none">Volver a sortear</button>
+
+  </div>
+
+  <script>
+    const MAX_PLAYERS = 4;
+    const MIN_PLAYERS = 2;
+    const playersContainer = document.getElementById('playersContainer');
+    const btnAdd = document.getElementById('btnAdd');
+    const btnSortear = document.getElementById('btnSortear');
+    const btnReset = document.getElementById('btnReset');
+    const displayText = document.getElementById('displayText');
+    const resultsDiv = document.getElementById('results');
+
+    let isAnimating = false;
+
+    // ── Player management ──
+    function getPlayerRows(){ return playersContainer.querySelectorAll('.player-row'); }
+    function getPlayerNames(){
+      return [...getPlayerRows()].map(r => r.querySelector('input').value.trim() || r.querySelector('input').placeholder);
+    }
+
+    function updateState(){
+      const rows = getPlayerRows();
+      const count = rows.length;
+
+      // Toggle remove buttons (min 2 players)
+      rows.forEach((row, i) => {
+        const btn = row.querySelector('.btn-remove');
+        btn.style.display = count <= MIN_PLAYERS ? 'none' : '';
+      });
+
+      // Toggle add button
+      btnAdd.style.display = count >= MAX_PLAYERS ? 'none' : '';
+
+      // Validate sortear button
+      const names = getPlayerNames();
+      const allFilled = names.every(n => n.trim().length > 0);
+      btnSortear.disabled = count < MIN_PLAYERS || !allFilled || isAnimating;
+    }
+
+    function addPlayer(){
+      const rows = getPlayerRows();
+      if(rows.length >= MAX_PLAYERS) return;
+      const num = rows.length + 1;
+      const row = document.createElement('div');
+      row.className = 'player-row';
+      row.innerHTML = `<input class="player-input" type="text" placeholder="Jugador ${num}" maxlength="20" autocomplete="off"><button class="btn-remove" aria-label="Eliminar">×</button>`;
+      playersContainer.appendChild(row);
+      bindRow(row);
+      row.querySelector('input').focus();
+      updateState();
+    }
+
+    function removePlayer(row){
+      const rows = getPlayerRows();
+      if(rows.length <= MIN_PLAYERS) return;
+      row.remove();
+      updateState();
+    }
+
+    function bindRow(row){
+      row.querySelector('.btn-remove').addEventListener('click', () => removePlayer(row));
+      row.querySelector('input').addEventListener('input', updateState);
+    }
+
+    // Bind existing rows
+    getPlayerRows().forEach(bindRow);
+
+    btnAdd.addEventListener('click', addPlayer);
+    updateState();
+
+    // ── Sound (Web Audio — no file needed) ──
+    function beep(freq, duration, vol = 0.08){
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.value = vol;
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + duration);
+      } catch(e){ /* silent on audio error */ }
+    }
+
+    function tick(){ beep(600, 0.06, 0.06); }
+    function fanfare(){
+      beep(523, 0.12, 0.1);
+      setTimeout(() => beep(659, 0.12, 0.1), 100);
+      setTimeout(() => beep(784, 0.25, 0.12), 200);
+    }
+
+    // ── Shuffle (Fisher-Yates) ──
+    function shuffle(arr){
+      const a = [...arr];
+      for(let i = a.length-1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i+1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // ── Sortear animation ──
+    async function sortear(){
+      if(isAnimating) return;
+      isAnimating = true;
+      updateState();
+      btnSortear.textContent = 'SORTEANDO…';
+
+      const names = getPlayerNames().filter(n => n.trim());
+      const shuffled = shuffle(names);
+      resultsDiv.classList.remove('show');
+      displayText.classList.remove('spinning');
+
+      // Phase 1: rapid spin (~1.2s, speeding up ticks)
+      const totalSpinTime = 1200;
+      let elapsed = 0;
+      let interval = 60; // ms between name changes
+
+      const startTime = performance.now();
+
+      await new Promise(resolve => {
+        function spin(now){
+          elapsed = now - startTime;
+          if(elapsed >= totalSpinTime){
+            displayText.textContent = '...';
+            displayText.classList.remove('spinning');
+            resolve();
+            return;
+          }
+          // Show random name
+          const idx = Math.floor(Math.random() * names.length);
+          displayText.textContent = names[idx];
+          displayText.classList.add('spinning');
+          if(elapsed > 200) tick();
+
+          // Speed up
+          const progress = elapsed / totalSpinTime;
+          interval = 60 + progress * 150; // starts fast, slows down a bit near end
+
+          setTimeout(() => requestAnimationFrame(spin), interval);
+        }
+        requestAnimationFrame(spin);
+      });
+
+      // Phase 2: dramatic pause
+      await new Promise(r => setTimeout(r, 300));
+
+      // Phase 3: reveal
+      displayText.classList.remove('spinning');
+      displayText.textContent = '🏆';
+      fanfare();
+
+      await new Promise(r => setTimeout(r, 400));
+
+      displayText.textContent = shuffled[0];
+
+      // Show full results
+      setTimeout(() => {
+        const emojis = ['🏆','🥈','🥉','🏌️'];
+        resultsDiv.innerHTML = shuffled.map((name, i) => `
+          <div class="result-row ${i===0?'first':''}">
+            <span class="result-num">${i+1}</span>
+            <span class="result-name">${name}</span>
+            <span class="result-emoji">${emojis[i]||'⛳'}</span>
+          </div>
+        `).join('');
+        resultsDiv.classList.add('show');
+        btnSortear.textContent = 'SORTEAR';
+        btnReset.style.display = '';
+        isAnimating = false;
+        updateState();
+      }, 200);
+    }
+
+    function reset(){
+      displayText.textContent = '👆';
+      resultsDiv.classList.remove('show');
+      resultsDiv.innerHTML = '';
+      btnReset.style.display = 'none';
+      btnSortear.textContent = 'SORTEAR';
+    }
+
+    btnSortear.addEventListener('click', sortear);
+    btnReset.addEventListener('click', reset);
+  </script>
+
+</body>
+</html>
