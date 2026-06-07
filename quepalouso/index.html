@@ -113,6 +113,41 @@
     .club-dot.active{background:#1a1a1a;color:#fff}
     .club-dot.near{background:#f0f0f0;color:#999}
 
+    /* ── Edit panel ── */
+    .btn-edit{
+      background:none;border:none;color:#bbb;font-size:12px;
+      font-family:inherit;cursor:pointer;text-align:center;
+      padding:4px 0;transition:color 0.2s;
+    }
+    .btn-edit:hover{color:#666}
+    .edit-panel{
+      background:#fff;border:1px solid #e8e8e8;border-radius:12px;
+      padding:16px;display:flex;flex-direction:column;
+    }
+    .edit-row{
+      display:flex;align-items:center;gap:8px;padding:6px 0;
+      border-bottom:1px solid #f5f5f5;font-size:14px;
+    }
+    .edit-row:last-child{border-bottom:none}
+    .edit-label{flex:1;font-weight:600;min-width:70px}
+    .edit-input{
+      width:52px;height:34px;border:1px solid #e0e0e0;border-radius:8px;
+      text-align:center;font-size:14px;font-family:inherit;
+      outline:none;transition:border-color 0.2s;
+    }
+    .edit-input:focus{border-color:#999}
+    .edit-sep{color:#ccc;font-size:12px}
+    .btn-save{
+      flex:1;height:40px;border-radius:10px;border:none;
+      background:#1a1a1a;color:#fff;font-size:14px;font-weight:600;
+      font-family:inherit;cursor:pointer;
+    }
+    .btn-reset-dfl{
+      flex:1;height:40px;border-radius:10px;
+      border:1px solid #e0e0e0;background:#fff;
+      color:#999;font-size:14px;font-family:inherit;cursor:pointer;
+    }
+
     @media(max-width:400px){
       .dist-value{font-size:56px}
       .club-name{font-size:36px}
@@ -139,7 +174,7 @@
         <button class="btn-step" id="up5">+5</button>
         <button class="btn-step" id="up10">+10</button>
       </div>
-      <input type="range" id="distSlider" min="30" max="280" value="140" step="5">
+      <input type="range" id="distSlider" min="30" max="300" value="150" step="5">
     </div>
 
     <!-- Wind + Slope -->
@@ -187,30 +222,54 @@
     <!-- All clubs reference -->
     <div class="all-clubs" id="allClubs"></div>
 
+    <!-- Edit mode -->
+    <button class="btn-edit" id="btnEdit">⚙ Ajustar distancias</button>
+    <div class="edit-panel" id="editPanel" style="display:none">
+      <div id="editFields"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-save" id="btnSave">Guardar</button>
+        <button class="btn-reset-dfl" id="btnResetDfl">Valores por defecto</button>
+      </div>
+    </div>
+
   </div>
 
   <script>
     // ── Club data (min distance in meters for each club) ──
-    const CLUBS = [
-      { name:'Driver',       min:200, max:260, emoji:'🏌️' },
-      { name:'Madera 3',     min:180, max:220 },
-      { name:'Madera 5',     min:170, max:200 },
-      { name:'Híbrido',      min:160, max:195 },
-      { name:'Hierro 3',     min:150, max:185 },
-      { name:'Hierro 4',     min:140, max:175 },
-      { name:'Hierro 5',     min:130, max:165 },
-      { name:'Hierro 6',     min:120, max:155 },
-      { name:'Hierro 7',     min:110, max:145 },
-      { name:'Hierro 8',     min:100, max:135 },
-      { name:'Hierro 9',     min:90,  max:125 },
-      { name:'PW',           min:80,  max:115 },
-      { name:'GW',           min:70,  max:105 },
-      { name:'SW',           min:50,  max:85  },
-      { name:'LW',           min:30,  max:65  },
+    // Default distances — tap "⚙ Ajustar distancias" to customize
+    const DEFAULT_CLUBS = [
+      { name:'Driver',       min:245, max:285 },
+      { name:'Madera 3',     min:220, max:250 },
+      { name:'Madera 5',     min:200, max:230 },
+      { name:'Híbrido',      min:185, max:210 },
+      { name:'Hierro 4',     min:170, max:195 },
+      { name:'Hierro 5',     min:160, max:180 },
+      { name:'Hierro 6',     min:150, max:170 },
+      { name:'Hierro 7',     min:140, max:160 },
+      { name:'Hierro 8',     min:130, max:150 },
+      { name:'Hierro 9',     min:118, max:138 },
+      { name:'PW',           min:105, max:128 },
+      { name:'GW',           min:90,  max:112 },
+      { name:'SW',           min:65,  max:95  },
+      { name:'LW',           min:30,  max:70  },
     ];
 
+    // ── Load saved distances (or defaults) ──
+    function loadClubs(){
+      try {
+        const saved = localStorage.getItem('quepalouso_clubs');
+        if(saved) return JSON.parse(saved);
+      } catch(e){}
+      return DEFAULT_CLUBS.map(c => ({...c}));
+    }
+
+    function saveClubs(){ try { localStorage.setItem('quepalouso_clubs', JSON.stringify(CLUBS)); } catch(e){} }
+
+    let CLUBS = loadClubs();
+
     // ── State ──
-    let distance = 140;
+    let distance = 150;
+    let editMode = false;
     let windDir = 'none';
     let windStr = 'suave';
     let slopeDir = 'plano';
@@ -381,6 +440,60 @@
         slopeDeg = btn.dataset.val;
         update();
       });
+    });
+
+    // ── Edit mode ──
+    const btnEdit = document.getElementById('btnEdit');
+    const editPanel = document.getElementById('editPanel');
+    const editFields = document.getElementById('editFields');
+
+    function renderEditFields(){
+      editFields.innerHTML = CLUBS.map(c => `
+        <div class="edit-row">
+          <span class="edit-label">${c.name}</span>
+          <input class="edit-input edit-min" data-name="${c.name}" type="number" value="${c.min}" min="10" max="400">
+          <span class="edit-sep">–</span>
+          <input class="edit-input edit-max" data-name="${c.name}" type="number" value="${c.max}" min="10" max="400">
+          <span style="font-size:12px;color:#999">m</span>
+        </div>
+      `).join('');
+    }
+
+    btnEdit.addEventListener('click', () => {
+      editMode = !editMode;
+      if(editMode){
+        renderEditFields();
+        editPanel.style.display = 'flex';
+        btnEdit.textContent = '▲ Ocultar ajustes';
+      } else {
+        editPanel.style.display = 'none';
+        btnEdit.textContent = '⚙ Ajustar distancias';
+      }
+    });
+
+    document.getElementById('btnSave').addEventListener('click', () => {
+      document.querySelectorAll('.edit-min').forEach(inp => {
+        const name = inp.dataset.name;
+        const club = CLUBS.find(c => c.name === name);
+        if(club) club.min = parseInt(inp.value) || club.min;
+      });
+      document.querySelectorAll('.edit-max').forEach(inp => {
+        const name = inp.dataset.name;
+        const club = CLUBS.find(c => c.name === name);
+        if(club) club.max = parseInt(inp.value) || club.max;
+      });
+      saveClubs();
+      editMode = false;
+      editPanel.style.display = 'none';
+      btnEdit.textContent = '⚙ Ajustar distancias';
+      update();
+    });
+
+    document.getElementById('btnResetDfl').addEventListener('click', () => {
+      CLUBS = DEFAULT_CLUBS.map(c => ({...c}));
+      saveClubs();
+      renderEditFields();
+      update();
     });
 
     // ── Init ──
