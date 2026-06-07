@@ -180,6 +180,42 @@
       animation:mini-bounce 0.8s ease infinite;
     }
 
+    /* ── Fuerza thumbnail ── */
+    .preview-fuerza{
+      background: #0d1117;
+      color: #e2e8f0;
+      font-size: 10px;
+      padding: 14px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .preview-fuerza .fz-body{
+      display:flex; justify-content:center; margin-bottom:4px;
+    }
+    .preview-fuerza .fz-silhouette{
+      width:40px;height:90px; position:relative;
+    }
+    .preview-fuerza .fz-silhouette::before{
+      content:''; position:absolute;
+      top:0;left:5px;width:30px;height:90px;
+      background: linear-gradient(to bottom,
+        transparent 0%, transparent 8%,
+        #f59e0b 8%, #f59e0b 22%,
+        #22c55e 22%, #22c55e 35%,
+        #30363d 35%, #30363d 65%,
+        #f59e0b 65%, #f59e0b 80%,
+        transparent 80%, transparent 100%);
+      border-radius: 14px 14px 8px 8px;
+    }
+    .preview-fuerza .fz-stats{
+      display:flex; gap:6px;
+    }
+    .preview-fuerza .fz-stat{
+      flex:1; background:rgba(255,255,255,0.04); border-radius:4px;
+      padding:4px 6px; text-align:center;
+    }
+    .preview-fuerza .fz-stat-val{ font-size:14px;font-weight:800;color:#f59e0b }
+    .preview-fuerza .fz-stat-lbl{ font-size:6px;color:#8b949e;text-transform:uppercase;letter-spacing:0.5px }
+
     /* ── ¿Qué Palo Uso? thumbnail ── */
     .preview-palo{
       background: #fff;
@@ -271,6 +307,21 @@
         <div class="palo-range">140 – 160 m</div>
       </div>
       <span class="title">Recomendador de palo de golf</span>
+    </a>
+
+    <!-- 🏋️ Fuerza · Deporte -->
+    <a class="card" data-category="deporte" href="/fuerza/" target="_blank" rel="noopener">
+      <div class="preview preview-fuerza">
+        <div class="fz-body">
+          <div class="fz-silhouette"></div>
+        </div>
+        <div class="fz-stats">
+          <div class="fz-stat"><div class="fz-stat-val">2,450</div><div class="fz-stat-lbl">kg vol.</div></div>
+          <div class="fz-stat"><div class="fz-stat-val">45:00</div><div class="fz-stat-lbl">tiempo</div></div>
+          <div class="fz-stat"><div class="fz-stat-val">4</div><div class="fz-stat-lbl">días</div></div>
+        </div>
+      </div>
+      <span class="title">Registro de entrenamiento de fuerza</span>
     </a>
 
   </div>

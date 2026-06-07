@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Fuerza — Always Be Young</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 15px;
+      color: #e2e8f0;
+      background: #0d1117;
+      min-height: 100dvh;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Auth screen ── */
+    #authScreen{
+      min-height: 100dvh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      background: radial-gradient(ellipse at 50% 0%, #1a1f2e 0%, #0d1117 70%);
+    }
+    .auth-card{
+      width: 100%; max-width: 380px;
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 16px;
+      padding: 36px 28px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .auth-logo{
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #f59e0b;
+      margin-bottom: 4px;
+    }
+    .auth-subtitle{ text-align:center; color:#8b949e; font-size:13px }
+    .auth-input{
+      width: 100%; height: 48px;
+      padding: 0 14px;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      background: #0d1117;
+      color: #e2e8f0;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .auth-input:focus{ border-color:#f59e0b }
+    .auth-input::placeholder{ color:#484f58 }
+    .auth-select{
+      width: 100%; height: 48px;
+      padding: 0 14px;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      background: #0d1117;
+      color: #e2e8f0;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+    }
+    .auth-btn{
+      width: 100%; height: 48px;
+      border-radius: 8px;
+      border: none;
+      background: #f59e0b;
+      color: #0d1117;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .auth-btn:hover{ background:#d97706 }
+    .auth-btn.secondary{
+      background: transparent;
+      border: 1px solid #30363d;
+      color: #8b949e;
+    }
+    .auth-btn.secondary:hover{ color:#e2e8f0; border-color:#8b949e }
+    .auth-error{ color:#f85149; font-size:13px; text-align:center; min-height:18px }
+
+    /* ── Main app (hidden until auth) ── */
+    #appScreen{ display:none; min-height:100dvh; flex-direction:column }
+    #appScreen.active{ display:flex }
+
+    /* ── Header ── */
+    .app-header{
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px;
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+      position: sticky; top:0; z-index:100;
+    }
+    .app-logo{
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #f59e0b;
+      flex-shrink: 0;
+    }
+    .app-user{
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color:#8b949e;
+    }
+    .app-user-dot{
+      width: 8px;height: 8px;border-radius: 50%;background: #22c55e;
+    }
+
+    /* ── Tab nav ── */
+    .tab-nav{
+      display: flex;
+      border-bottom: 1px solid #21262d;
+      background: #0d1117;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-btn{
+      flex: 1; min-width: 90px;
+      padding: 12px 8px;
+      border: none; border-bottom: 2px solid transparent;
+      background: none;
+      color: #8b949e;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn.active{ color:#f59e0b; border-bottom-color:#f59e0b }
+    .tab-btn:hover{ color:#e2e8f0 }
+
+    /* ── Tab content ── */
+    .tab-content{ display:none; flex:1; padding:16px; overflow-y:auto }
+    .tab-content.active{ display:block }
+
+    /* ── Body model ── */
+    .body-model-wrap{
+      display: flex; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .body-model{ position:relative; width:160px; height:320px }
+    .body-model svg{ width:100%;height:100% }
+    .body-part{
+      fill: #21262d; stroke: #30363d; stroke-width: 1;
+      cursor: pointer; transition: fill 0.25s;
+    }
+    .body-part:hover{ fill:#30363d }
+    .body-part.active{ fill:#f59e0b; stroke:#f59e0b }
+    .body-part.highlight{ fill:#22c55e; stroke:#22c55e; animation: pulse-highlight 1.5s ease infinite }
+    @keyframes pulse-highlight{
+      0%,100%{fill:#22c55e}
+      50%{fill:#166534}
+    }
+    .body-label{
+      position: absolute;
+      font-size: 9px; color:#8b949e; pointer-events:none;
+      text-align: center; transform: translate(-50%,-50%);
+    }
+
+    /* ── Exercise browser ── */
+    .filter-row{
+      display: flex; gap: 8px; margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .filter-chip{
+      padding: 5px 12px; border-radius: 14px;
+      border: 1px solid #30363d;
+      background: none;
+      color: #8b949e;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .filter-chip.active{ background:#f59e0b;color:#0d1117;border-color:#f59e0b }
+    .exercise-list{ display:flex; flex-direction:column; gap:4px }
+    .exercise-item{
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #161b22;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-size: 14px;
+    }
+    .exercise-item:hover{ border-color:#30363d }
+    .exercise-item.selected{ border-color:#f59e0b; background:#1f1a0a }
+    .exercise-item .ex-name{ flex:1; font-weight:500 }
+    .exercise-item .ex-meta{ font-size:11px; color:#8b949e; display:flex;gap:8px }
+    .exercise-item .ex-add{
+      width: 28px;height: 28px;border-radius: 50%;
+      background:#21262d;color:#8b949e;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;font-weight:700;
+      margin-left: 8px;
+      transition: all 0.15s;
+    }
+    .exercise-item.selected .ex-add{ background:#f59e0b;color:#0d1117 }
+
+    /* ── Active workout ── */
+    .active-exercise{
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .ae-header{
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px;
+      background: #1a1f2e;
+      cursor: pointer;
+    }
+    .ae-name{ font-weight:600;font-size:15px }
+    .ae-volume{ font-size:12px;color:#f59e0b;font-weight:600 }
+    .ae-remove{
+      width: 28px;height:28px;border-radius:50%;
+      background: none; border:1px solid #30363d;
+      color:#8b949e; font-size:16px; cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .ae-body{ padding:10px 14px 14px; display:flex;flex-direction:column;gap:8px }
+    .set-row{
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; flex-wrap: wrap;
+    }
+    .set-label{ color:#8b949e; font-size:11px; min-width:40px }
+    .set-input{
+      width: 60px; height: 34px;
+      padding: 0 8px; border:1px solid #30363d;
+      border-radius: 6px; background:#0d1117; color:#e2e8f0;
+      font-size: 14px; font-family: inherit; text-align: center;
+      outline: none;
+    }
+    .set-input:focus{ border-color:#f59e0b }
+    .set-input.small{ width:48px }
+    .set-vol{ color:#f59e0b; font-weight:700; font-size:13px; min-width:60px; text-align:right }
+    .btn-add-set{
+      background: none; border:1px dashed #30363d; border-radius:6px;
+      color:#8b949e; font-size:12px; font-family:inherit; cursor:pointer;
+      padding: 6px; margin-top:4px; transition: all 0.15s;
+    }
+    .btn-add-set:hover{ color:#e2e8f0; border-color:#8b949e }
+
+    /* ── Timers ── */
+    .timers-bar{
+      display: flex; gap: 12px; margin-bottom: 16px;
+    }
+    .timer-box{
+      flex:1; background:#161b22; border:1px solid #21262d;
+      border-radius: 10px; padding: 12px; text-align: center;
+    }
+    .timer-label{ font-size:10px; color:#8b949e; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px }
+    .timer-value{ font-size:28px; font-weight:800; font-variant-numeric:tabular-nums }
+    .timer-value.resting{ color:#22c55e }
+    .timer-btns{ display:flex; gap:6px; justify-content:center; margin-top:8px }
+    .timer-btn{
+      padding: 4px 10px; border-radius: 6px; border:1px solid #30363d;
+      background: none; color:#8b949e; font-size:11px; font-family:inherit;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .timer-btn:hover{ color:#e2e8f0; border-color:#8b949e }
+    .timer-btn.start{ background:#22c55e;color:#0d1117;border-color:#22c55e }
+
+    /* ── Finish button ── */
+    .btn-finish{
+      width: 100%; height: 52px; border-radius: 10px;
+      border: none; background:#f59e0b; color:#0d1117;
+      font-size: 16px; font-weight: 700; font-family: inherit;
+      cursor: pointer; margin-top: 12px;
+      transition: all 0.2s;
+    }
+    .btn-finish:hover{ background:#d97706 }
+    .btn-finish:disabled{ background:#21262d;color:#484f58;cursor:not-allowed }
+
+    /* ── Calendar ── */
+    .cal-nav{
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .cal-title{ font-weight:700;font-size:16px }
+    .cal-nav-btn{
+      width:36px;height:36px;border-radius:50%;border:1px solid #30363d;
+      background:none;color:#e2e8f0;font-size:18px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .cal-grid{
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 4px; margin-bottom: 12px;
+    }
+    .cal-day-header{
+      text-align: center; font-size:11px; color:#8b949e;
+      padding: 6px 0; font-weight:600;
+    }
+    .cal-day{
+      aspect-ratio: 1;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: 1px solid transparent;
+    }
+    .cal-day:hover{ border-color:#30363d }
+    .cal-day.other{ color:#30363d; cursor:default }
+    .cal-day.trained{ background:#f59e0b;color:#0d1117;font-weight:700 }
+    .cal-day.today{ border-color:#f59e0b; color:#f59e0b }
+    .cal-day.trained.today{ background:#f59e0b;color:#0d1117 }
+    .cal-legend{
+      display: flex; gap: 16px; justify-content: center;
+      font-size: 11px; color:#8b949e; margin-bottom: 16px;
+    }
+    .cal-legend span{ display:flex;align-items:center;gap:6px }
+    .cal-legend-dot{
+      width:10px;height:10px;border-radius:50%;
+    }
+    .cal-legend-dot.trained{ background:#f59e0b }
+    .cal-legend-dot.today{ border:2px solid #f59e0b;background:none }
+
+    .day-detail{
+      background:#161b22; border:1px solid #21262d;
+      border-radius: 12px; padding: 16px;
+      margin-top: 12px;
+    }
+    .day-detail h3{ margin-bottom:12px;font-size:15px }
+    .dd-exercise{
+      padding: 8px 0; border-bottom:1px solid #21262d;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .dd-exercise:last-child{ border-bottom:none }
+
+    /* ── Settings ── */
+    .settings-group{
+      background:#161b22; border:1px solid #21262d;
+      border-radius: 12px; padding: 16px; margin-bottom: 16px;
+    }
+    .settings-group h3{ font-size:14px;margin-bottom:12px;color:#8b949e;text-transform:uppercase;letter-spacing:1px }
+    .setting-row{
+      display:flex; justify-content:space-between; align-items:center;
+      padding: 10px 0; border-bottom:1px solid #21262d;
+    }
+    .setting-row:last-child{ border-bottom:none }
+    .setting-label{ font-size:14px }
+    .setting-hint{ font-size:11px;color:#8b949e;margin-top:2px }
+    .setting-select{
+      height: 36px; padding:0 10px;
+      border:1px solid #30363d; border-radius:6px;
+      background:#0d1117; color:#e2e8f0;
+      font-size:13px; font-family:inherit; cursor:pointer;
+    }
+    .setting-input{
+      height: 36px; width: 240px; max-width: 50%;
+      padding:0 10px; border:1px solid #30363d; border-radius:6px;
+      background:#0d1117; color:#e2e8f0;
+      font-size:13px; font-family:inherit; outline:none;
+    }
+    .setting-input:focus{ border-color:#f59e0b }
+    .btn-danger{
+      padding: 8px 16px; border-radius:6px;
+      border:1px solid #f85149; background:none; color:#f85149;
+      font-size:13px; font-family:inherit; cursor:pointer;
+      transition: all 0.15s;
+    }
+    .btn-danger:hover{ background:#f85149;color:#fff }
+
+    /* ── AI Modal ── */
+    .modal-overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,0.7);
+      display:flex; align-items:center; justify-content:center;
+      z-index:200; padding:20px;
+    }
+    .modal{
+      width:100%; max-width:500px; max-height:80dvh;
+      background:#161b22; border:1px solid #21262d;
+      border-radius:16px; padding:24px;
+      overflow-y:auto;
+    }
+    .modal h2{ margin-bottom:16px; color:#f59e0b;font-size:18px }
+    .modal p{ margin-bottom:10px;font-size:14px;line-height:1.6 }
+    .modal .ai-section{ margin-bottom:16px }
+    .modal .ai-section h3{ font-size:14px;color:#8b949e;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px }
+    .btn-close{
+      width:100%; height:44px; border-radius:8px;
+      border:1px solid #30363d; background:none;color:#e2e8f0;
+      font-size:14px;font-family:inherit;cursor:pointer;
+      margin-top:12px;
+    }
+
+    /* ── Loading ── */
+    .loader{
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      padding:20px; color:#8b949e;
+    }
+    .loader-dot{
+      width:8px;height:8px;border-radius:50%;background:#f59e0b;
+      animation: load-bounce 0.6s ease infinite alternate;
+    }
+    .loader-dot:nth-child(2){animation-delay:0.2s}
+    .loader-dot:nth-child(3){animation-delay:0.4s}
+    @keyframes load-bounce{ to{transform:translateY(-8px);opacity:0.5} }
+
+    /* ── Responsive ── */
+    @media(max-width:480px){
+      .timers-bar{flex-direction:column}
+      .tab-btn{font-size:12px;padding:10px 6px}
+      .filter-chip{font-size:11px;padding:4px 10px}
+      .body-model{width:130px;height:260px}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════ AUTH SCREEN ═══════════ -->
+  <div id="authScreen">
+    <div class="auth-card">
+      <div class="auth-logo">FUERZA</div>
+      <div class="auth-subtitle" id="authSubtitle">Registro de entrenamiento de fuerza</div>
+
+      <input class="auth-input" type="text" id="authUser" placeholder="Usuario" maxlength="20" autocomplete="off">
+      <input class="auth-input" type="password" id="authPass" placeholder="Contraseña" maxlength="32" autocomplete="off">
+
+      <select class="auth-select" id="authLang">
+        <option value="es">🇪🇸 Español</option>
+        <option value="zh">🇨🇳 中文</option>
+      </select>
+
+      <div class="auth-error" id="authError"></div>
+
+      <button class="auth-btn" id="btnLogin">Iniciar sesión</button>
+      <button class="auth-btn secondary" id="btnRegister">Crear cuenta</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ MAIN APP ═══════════ -->
+  <div id="appScreen">
+
+    <!-- Header -->
+    <div class="app-header">
+      <div class="app-logo">FUERZA</div>
+      <div class="app-user">
+        <span class="app-user-dot"></span>
+        <span id="appUsername"></span>
+      </div>
+    </div>
+
+    <!-- Tab nav -->
+    <div class="tab-nav">
+      <button class="tab-btn active" data-tab="workout">🏋️ <span id="tabWorkout">Entrenar</span></button>
+      <button class="tab-btn" data-tab="history">📅 <span id="tabHistory">Historial</span></button>
+      <button class="tab-btn" data-tab="settings">⚙️ <span id="tabSettings">Ajustes</span></button>
+    </div>
+
+    <!-- ═══════ WORKOUT TAB ═══════ -->
+    <div class="tab-content active" id="tab-workout">
+
+      <!-- Body model -->
+      <div class="body-model-wrap">
+        <div class="body-model" id="bodyModel">
+          <svg viewBox="0 0 160 320" xmlns="http://www.w3.org/2000/svg">
+            <!-- Head -->
+            <ellipse cx="80" cy="24" rx="16" ry="20" class="body-part" data-part="none" id="bp-head"/>
+
+            <!-- Neck -->
+            <rect x="73" y="42" width="14" height="10" rx="3" class="body-part" data-part="none"/>
+
+            <!-- Shoulders / Hombros -->
+            <ellipse cx="50" cy="68" rx="24" ry="18" class="body-part" data-part="hombros" id="bp-hombros"/>
+            <ellipse cx="110" cy="68" rx="24" ry="18" class="body-part" data-part="hombros"/>
+
+            <!-- Chest / Pecho -->
+            <path d="M56,60 C56,60 56,110 80,115 C104,110 104,60 104,60" class="body-part" data-part="pecho" id="bp-pecho"/>
+
+            <!-- Arms / Brazos -->
+            <ellipse cx="34" cy="110" rx="14" ry="28" class="body-part" data-part="brazos" id="bp-brazos"/>
+            <ellipse cx="126" cy="110" rx="14" ry="28" class="body-part" data-part="brazos"/>
+
+            <!-- Abs / Abdominales -->
+            <path d="M56,115 C56,115 56,160 80,165 C104,160 104,115 104,115" class="body-part" data-part="abdominales" id="bp-abdominales"/>
+
+            <!-- Back / Espalda (shown as lats area on sides) -->
+            <ellipse cx="48" cy="130" rx="10" ry="22" class="body-part" data-part="espalda" id="bp-espalda"/>
+            <ellipse cx="112" cy="130" rx="10" ry="22" class="body-part" data-part="espalda"/>
+
+            <!-- Legs / Piernas -->
+            <rect x="58" y="168" width="18" height="75" rx="9" class="body-part" data-part="piernas" id="bp-piernas"/>
+            <rect x="84" y="168" width="18" height="75" rx="9" class="body-part" data-part="piernas"/>
+
+            <!-- Feet -->
+            <ellipse cx="67" cy="248" rx="14" ry="8" class="body-part" data-part="none"/>
+            <ellipse cx="93" cy="248" rx="14" ry="8" class="body-part" data-part="none"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-row" id="filterParts">
+        <button class="filter-chip active" data-part="todos" id="fTodos">Todos</button>
+        <button class="filter-chip" data-part="pecho">Pecho</button>
+        <button class="filter-chip" data-part="espalda">Espalda</button>
+        <button class="filter-chip" data-part="piernas">Piernas</button>
+        <button class="filter-chip" data-part="hombros">Hombros</button>
+        <button class="filter-chip" data-part="brazos">Brazos</button>
+        <button class="filter-chip" data-part="abdominales">Abdominales</button>
+      </div>
+
+      <div class="filter-row" id="filterEquip" style="margin-top:-4px">
+        <button class="filter-chip active" data-equip="todos">Todos</button>
+        <button class="filter-chip" data-equip="barra">Barra</button>
+        <button class="filter-chip" data-equip="mancuernas">Mancuernas</button>
+        <button class="filter-chip" data-equip="maquina">Máquina</button>
+        <button class="filter-chip" data-equip="polea">Polea</button>
+        <button class="filter-chip" data-equip="peso_corporal">Peso corporal</button>
+        <button class="filter-chip" data-equip="bandas">Bandas</button>
+        <button class="filter-chip" data-equip="kettlebell">Kettlebell</button>
+      </div>
+
+      <!-- Exercise list -->
+      <div class="exercise-list" id="exerciseList"></div>
+
+      <!-- Active workout -->
+      <div id="activeWorkout" style="margin-top:16px"></div>
+
+      <!-- Timers -->
+      <div class="timers-bar">
+        <div class="timer-box">
+          <div class="timer-label" id="lblRest">Descanso</div>
+          <div class="timer-value" id="restTimer">1:30</div>
+          <div class="timer-btns">
+            <button class="timer-btn" id="btnRestStart">Iniciar</button>
+            <button class="timer-btn" id="btnRestReset">↺</button>
+          </div>
+        </div>
+        <div class="timer-box">
+          <div class="timer-label" id="lblTotal">Total</div>
+          <div class="timer-value" id="totalTimer">00:00</div>
+          <div class="timer-btns">
+            <button class="timer-btn start" id="btnTotalToggle">▶</button>
+            <button class="timer-btn" id="btnTotalReset">↺</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finish -->
+      <button class="btn-finish" id="btnFinish" disabled>Finalizar entrenamiento</button>
+    </div>
+
+    <!-- ═══════ HISTORY TAB ═══════ -->
+    <div class="tab-content" id="tab-history">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" id="calPrev">◀</button>
+        <span class="cal-title" id="calTitle"></span>
+        <button class="cal-nav-btn" id="calNext">▶</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <span><span class="cal-legend-dot trained"></span> <span id="lblTrained">Entrenado</span></span>
+        <span><span class="cal-legend-dot today"></span> <span id="lblToday">Hoy</span></span>
+      </div>
+      <div id="dayDetail"></div>
+    </div>
+
+    <!-- ═══════ SETTINGS TAB ═══════ -->
+    <div class="tab-content" id="tab-settings">
+      <div class="settings-group">
+        <h3 id="sectLang">Idioma / 语言</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" id="lblSwitchLang">Cambiar idioma</div>
+            <div class="setting-hint" id="hintSwitchLang">Reinicia la aplicación</div>
+          </div>
+          <select class="setting-select" id="settingLang">
+            <option value="es">🇪🇸 Español</option>
+            <option value="zh">🇨🇳 中文</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3>🤖 AI</h3>
+        <div class="setting-row">
+          <div style="flex:1;margin-right:12px">
+            <div class="setting-label">Google Gemini API Key</div>
+            <div class="setting-hint" id="hintApiKey">Obtén una clave gratuita en aistudio.google.com</div>
+          </div>
+          <input class="setting-input" type="password" id="settingApiKey" placeholder="AIza...">
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3 id="sectWorkout">Entrenamiento</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" id="lblRestTime">Tiempo de descanso</div>
+          </div>
+          <select class="setting-select" id="settingRestTime">
+            <option value="60">60s</option>
+            <option value="90" selected>90s</option>
+            <option value="120">120s</option>
+            <option value="180">180s</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3 id="sectData">Datos</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" id="lblExportAll">Exportar todos los datos</div>
+            <div class="setting-hint" id="hintExportAll">Descarga un archivo JSON</div>
+          </div>
+          <button class="timer-btn" id="btnExportData">Exportar</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label" id="lblClearData">Borrar todos los datos</div>
+            <div class="setting-hint" style="color:#f85149" id="hintClearData">Esta acción no se puede deshacer</div>
+          </div>
+          <button class="btn-danger" id="btnClearData">Borrar todo</button>
+        </div>
+      </div>
+
+      <button class="auth-btn secondary" id="btnLogout" style="margin-top:8px;width:100%" id="lblLogout">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- ═══════ AI MODAL ═══════ -->
+  <div class="modal-overlay" id="aiModal" style="display:none">
+    <div class="modal" id="aiModalContent"></div>
+  </div>
+
+  <!-- ═══════ EXPORT CANVAS HIDDEN ═══════ -->
+  <div id="exportArea" style="position:absolute;left:-9999px;top:0;width:600px;background:#0d1117;color:#e2e8f0;padding:24px;font-family:sans-serif"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  I18N
+// ═══════════════════════════════════════════
+const I18N = {
+  es: {
+    authSubtitle: 'Registro de entrenamiento de fuerza',
+    login: 'Iniciar sesión',
+    register: 'Crear cuenta',
+    username: 'Usuario',
+    password: 'Contraseña',
+    errorUserExists: 'El usuario ya existe',
+    errorUserNotFound: 'Usuario no encontrado',
+    errorWrongPass: 'Contraseña incorrecta',
+    errorFillAll: 'Rellena todos los campos',
+    errorRegistered: 'Cuenta creada. Inicia sesión.',
+    tabWorkout: 'Entrenar',
+    tabHistory: 'Historial',
+    tabSettings: 'Ajustes',
+    filterAll: 'Todos',
+    filterAllEquip: 'Todos',
+    lblRest: 'Descanso',
+    lblTotal: 'Total',
+    btnRestStart: 'Iniciar',
+    btnRestReset: '↺',
+    finish: 'Finalizar entrenamiento',
+    finishDisabled: 'Añade ejercicios para finalizar',
+    noExercises: 'No hay ejercicios con estos filtros',
+    addSet: '+ Añadir serie',
+    set: 'Serie',
+    kg: 'kg',
+    reps: 'rep',
+    volume: 'Volumen:',
+    totalVolume: 'Volumen total',
+    remove: '✕',
+    sectWorkout: 'Entrenamiento',
+    sectLang: 'Idioma / 语言',
+    sectData: 'Datos',
+    sectAI: '🤖 AI',
+    lblSwitchLang: 'Cambiar idioma',
+    hintSwitchLang: 'Se recargará la aplicación',
+    hintApiKey: 'Obtén una clave gratuita en aistudio.google.com',
+    lblRestTime: 'Tiempo de descanso por defecto',
+    lblExportAll: 'Exportar todos los datos',
+    hintExportAll: 'Descarga un archivo JSON con todo tu historial',
+    lblClearData: 'Borrar todos los datos',
+    hintClearData: 'Esta acción no se puede deshacer',
+    lblLogout: 'Cerrar sesión',
+    btnExportData: 'Exportar',
+    btnClearData: 'Borrar todo',
+    confirmClear: '¿Seguro que quieres borrar todos los datos?',
+    aiTitle: 'Análisis del entrenamiento',
+    aiTraining: 'Consejos de entrenamiento',
+    aiNutrition: 'Consejos de nutrición',
+    aiLoading: 'Consultando a la IA...',
+    aiError: 'Error al contactar con la IA. Verifica tu API key.',
+    aiNoKey: 'Configura tu API key de Gemini en Ajustes para recibir consejos.',
+    exportTitle: 'Resumen de entrenamiento',
+    exportThisWorkout: 'Este entrenamiento',
+    exportThisWeek: 'Esta semana',
+    exportDays: 'Días entrenados',
+    exportDuration: 'Duración total',
+    exportVolume: 'Volumen total',
+    trained: 'Entrenado',
+    today: 'Hoy',
+    noHistory: 'Sin entrenamientos este día',
+    mon: 'Lun', tue: 'Mar', wed: 'Mié', thu: 'Jue', fri: 'Vie', sat: 'Sáb', sun: 'Dom',
+    monS: 'L', tueS: 'M', wedS: 'X', thuS: 'J', friS: 'V', satS: 'S', sunS: 'D',
+    btnExportImg: '📸 Exportar imagen',
+    btnExportImgDesc: 'Guardar como imagen PNG',
+    bodyParts: {
+      pecho: 'Pecho', espalda: 'Espalda', piernas: 'Piernas',
+      hombros: 'Hombros', brazos: 'Brazos', abdominales: 'Abdominales'
+    },
+    equipLabels: {
+      barra:'Barra', mancuernas:'Mancuernas', maquina:'Máquina',
+      polea:'Polea', peso_corporal:'Peso corporal', bandas:'Bandas', kettlebell:'Kettlebell'
+    }
+  },
+  zh: {
+    authSubtitle: '力量训练记录',
+    login: '登录',
+    register: '注册',
+    username: '用户名',
+    password: '密码',
+    errorUserExists: '用户已存在',
+    errorUserNotFound: '用户不存在',
+    errorWrongPass: '密码错误',
+    errorFillAll: '请填写所有字段',
+    errorRegistered: '账户已创建，请登录',
+    tabWorkout: '训练',
+    tabHistory: '历史',
+    tabSettings: '设置',
+    filterAll: '全部',
+    filterAllEquip: '全部',
+    lblRest: '组间休息',
+    lblTotal: '总时长',
+    btnRestStart: '开始',
+    btnRestReset: '↺',
+    finish: '结束训练',
+    finishDisabled: '添加训练动作后可结束',
+    noExercises: '没有符合条件的动作',
+    addSet: '+ 添加一组',
+    set: '组',
+    kg: '公斤',
+    reps: '次',
+    volume: '容量:',
+    totalVolume: '总容量',
+    remove: '✕',
+    sectWorkout: '训练设置',
+    sectLang: '语言 / Idioma',
+    sectData: '数据',
+    sectAI: '🤖 AI',
+    lblSwitchLang: '切换语言',
+    hintSwitchLang: '将重新加载应用',
+    hintApiKey: '在 aistudio.google.com 获取免费密钥',
+    lblRestTime: '默认休息时间',
+    lblExportAll: '导出所有数据',
+    hintExportAll: '下载JSON文件',
+    lblClearData: '清除所有数据',
+    hintClearData: '此操作不可撤销',
+    lblLogout: '退出登录',
+    btnExportData: '导出',
+    btnClearData: '全部清除',
+    confirmClear: '确定要删除所有数据吗？',
+    aiTitle: '训练分析',
+    aiTraining: '训练建议',
+    aiNutrition: '饮食建议',
+    aiLoading: '正在咨询AI...',
+    aiError: 'AI连接失败，请检查API密钥',
+    aiNoKey: '在设置中配置Gemini API密钥以获取建议',
+    exportTitle: '训练总结',
+    exportThisWorkout: '本次训练',
+    exportThisWeek: '本周',
+    exportDays: '训练天数',
+    exportDuration: '总时长',
+    exportVolume: '总容量',
+    trained: '已训练',
+    today: '今天',
+    noHistory: '当天没有训练记录',
+    mon: '周一', tue: '周二', wed: '周三', thu: '周四', fri: '周五', sat: '周六', sun: '周日',
+    monS: '一', tueS: '二', wedS: '三', thuS: '四', friS: '五', satS: '六', sunS: '日',
+    btnExportImg: '📸 导出图片',
+    btnExportImgDesc: '保存为PNG图片',
+    bodyParts: {
+      pecho: '胸部', espalda: '背部', piernas: '腿部',
+      hombros: '肩部', brazos: '手臂', abdominales: '腹部'
+    },
+    equipLabels: {
+      barra:'杠铃', mancuernas:'哑铃', maquina:'器械',
+      polea:'绳索', peso_corporal:'自重', bandas:'弹力带', kettlebell:'壶铃'
+    }
+  }
+};
+
+// ═══════════════════════════════════════════
+//  EXERCISE DATABASE
+// ═══════════════════════════════════════════
+const EXERCISES = [
+  // Pecho
+  {id:'bench_barra', part:'pecho', equip:'barra', es:'Press banca con barra', zh:'杠铃卧推'},
+  {id:'bench_manc', part:'pecho', equip:'mancuernas', es:'Press banca con mancuernas', zh:'哑铃卧推'},
+  {id:'inclinado_barra', part:'pecho', equip:'barra', es:'Press inclinado con barra', zh:'上斜杠铃卧推'},
+  {id:'inclinado_manc', part:'pecho', equip:'mancuernas', es:'Press inclinado con mancuernas', zh:'上斜哑铃卧推'},
+  {id:'aperturas', part:'pecho', equip:'mancuernas', es:'Aperturas con mancuernas', zh:'哑铃飞鸟'},
+  {id:'declinado', part:'pecho', equip:'barra', es:'Press declinado con barra', zh:'下斜杠铃卧推'},
+  {id:'cruces_polea', part:'pecho', equip:'polea', es:'Cruces en polea', zh:'绳索夹胸'},
+  {id:'flexiones', part:'pecho', equip:'peso_corporal', es:'Flexiones', zh:'俯卧撑'},
+  {id:'press_maq_pecho', part:'pecho', equip:'maquina', es:'Press en máquina', zh:'器械推胸'},
+  {id:'fondos_paralelas', part:'pecho', equip:'peso_corporal', es:'Fondos en paralelas (pecho)', zh:'双杠臂屈伸(胸)'},
+
+  // Espalda
+  {id:'peso_muerto', part:'espalda', equip:'barra', es:'Peso muerto', zh:'硬拉'},
+  {id:'remo_barra', part:'espalda', equip:'barra', es:'Remo con barra', zh:'杠铃划船'},
+  {id:'remo_manc', part:'espalda', equip:'mancuernas', es:'Remo con mancuerna', zh:'哑铃划船'},
+  {id:'dominadas', part:'espalda', equip:'peso_corporal', es:'Dominadas', zh:'引体向上'},
+  {id:'jalon_pecho', part:'espalda', equip:'polea', es:'Jalón al pecho', zh:'高位下拉'},
+  {id:'remo_polea_baja', part:'espalda', equip:'polea', es:'Remo en polea baja', zh:'坐姿绳索划船'},
+  {id:'remo_maquina', part:'espalda', equip:'maquina', es:'Remo en máquina', zh:'器械划船'},
+  {id:'pullover', part:'espalda', equip:'mancuernas', es:'Pull-over con mancuerna', zh:'哑铃 pullover'},
+  {id:'shrugs', part:'espalda', equip:'mancuernas', es:'Encogimientos de hombros', zh:'哑铃耸肩'},
+  {id:'hiperextensiones', part:'espalda', equip:'peso_corporal', es:'Hiperextensiones', zh:'山羊挺身'},
+
+  // Piernas
+  {id:'sentadilla_barra', part:'piernas', equip:'barra', es:'Sentadilla con barra', zh:'杠铃深蹲'},
+  {id:'sentadilla_frontal', part:'piernas', equip:'barra', es:'Sentadilla frontal', zh:'前蹲'},
+  {id:'prensa', part:'piernas', equip:'maquina', es:'Prensa de piernas', zh:'腿举'},
+  {id:'extension_cuad', part:'piernas', equip:'maquina', es:'Extensión de cuádriceps', zh:'腿屈伸'},
+  {id:'curl_femoral', part:'piernas', equip:'maquina', es:'Curl femoral', zh:'腿弯举'},
+  {id:'peso_muerto_rumano', part:'piernas', equip:'barra', es:'Peso muerto rumano', zh:'罗马尼亚硬拉'},
+  {id:'zancadas', part:'piernas', equip:'mancuernas', es:'Zancadas con mancuernas', zh:'哑铃箭步蹲'},
+  {id:'sentadilla_bulgara', part:'piernas', equip:'mancuernas', es:'Sentadilla búlgara', zh:'保加利亚分腿蹲'},
+  {id:'gemelos_pie', part:'piernas', equip:'maquina', es:'Gemelos de pie', zh:'站姿提踵'},
+  {id:'gemelos_sentado', part:'piernas', equip:'maquina', es:'Gemelos sentado', zh:'坐姿提踵'},
+  {id:'hip_thrust', part:'piernas', equip:'barra', es:'Hip thrust con barra', zh:'杠铃臀推'},
+  {id:'puente_gluteo', part:'piernas', equip:'peso_corporal', es:'Puente de glúteos', zh:'臀桥'},
+
+  // Hombros
+  {id:'press_militar_barra', part:'hombros', equip:'barra', es:'Press militar con barra', zh:'杠铃推举'},
+  {id:'press_militar_manc', part:'hombros', equip:'mancuernas', es:'Press militar con mancuernas', zh:'哑铃推举'},
+  {id:'elevaciones_laterales', part:'hombros', equip:'mancuernas', es:'Elevaciones laterales', zh:'侧平举'},
+  {id:'elevaciones_frontales', part:'hombros', equip:'mancuernas', es:'Elevaciones frontales', zh:'前平举'},
+  {id:'pajaro', part:'hombros', equip:'mancuernas', es:'Pájaro con mancuernas', zh:'俯身侧平举'},
+  {id:'face_pull', part:'hombros', equip:'polea', es:'Face pull en polea', zh:'绳索面拉'},
+  {id:'press_arnold', part:'hombros', equip:'mancuernas', es:'Press Arnold', zh:'阿诺德推举'},
+
+  // Brazos
+  {id:'curl_barra', part:'brazos', equip:'barra', es:'Curl de bíceps con barra', zh:'杠铃弯举'},
+  {id:'curl_manc', part:'brazos', equip:'mancuernas', es:'Curl de bíceps con mancuernas', zh:'哑铃弯举'},
+  {id:'curl_martillo', part:'brazos', equip:'mancuernas', es:'Curl martillo', zh:'锤式弯举'},
+  {id:'curl_predicador', part:'brazos', equip:'barra', es:'Curl en predicador', zh:'牧师凳弯举'},
+  {id:'tricep_polea', part:'brazos', equip:'polea', es:'Extensión de tríceps en polea', zh:'绳索下压'},
+  {id:'tricep_manc', part:'brazos', equip:'mancuernas', es:'Extensión de tríceps con mancuerna', zh:'哑铃颈后臂屈伸'},
+  {id:'fondos_banco', part:'brazos', equip:'peso_corporal', es:'Fondos en banco', zh:'凳上臂屈伸'},
+  {id:'curl_concentrado', part:'brazos', equip:'mancuernas', es:'Curl concentrado', zh:'集中弯举'},
+
+  // Abdominales
+  {id:'plancha', part:'abdominales', equip:'peso_corporal', es:'Plancha', zh:'平板支撑'},
+  {id:'crunch', part:'abdominales', equip:'peso_corporal', es:'Crunch abdominal', zh:'卷腹'},
+  {id:'elevacion_piernas', part:'abdominales', equip:'peso_corporal', es:'Elevación de piernas', zh:'抬腿'},
+  {id:'rueda_abdominal', part:'abdominales', equip:'peso_corporal', es:'Rueda abdominal', zh:'健腹轮'},
+  {id:'giro_ruso', part:'abdominales', equip:'peso_corporal', es:'Giro ruso', zh:'俄罗斯转体'},
+  {id:'mountain_climbers', part:'abdominales', equip:'peso_corporal', es:'Mountain climbers', zh:'登山者'},
+];
+
+// ═══════════════════════════════════════════
+//  GLOBAL STATE
+// ═══════════════════════════════════════════
+let LANG = 'es';
+let currentUser = null;
+let activeWorkout = []; // {id, sets:[{weight,reps}]}
+let filterPart = 'todos';
+let filterEquip = 'todos';
+let restSeconds = 90;
+let restRemaining = 90;
+let restInterval = null;
+let totalSeconds = 0;
+let totalInterval = null;
+let calYear, calMonth;
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function t(key){ return (I18N[LANG] && I18N[LANG][key]) || key; }
+function tBody(key){ return (I18N[LANG] && I18N[LANG].bodyParts && I18N[LANG].bodyParts[key]) || key; }
+function tEquip(key){ return (I18N[LANG] && I18N[LANG].equipLabels && I18N[LANG].equipLabels[key]) || key; }
+function exName(ex){ return LANG === 'zh' ? ex.zh : ex.es; }
+function storageKey(k){ return 'fuerza_' + (currentUser||'') + '_' + k; }
+function saveData(k, v){ localStorage.setItem(storageKey(k), JSON.stringify(v)); }
+function loadData(k){ const v = localStorage.getItem(storageKey(k)); return v ? JSON.parse(v) : null; }
+function fmtTime(s){ const m = Math.floor(s/60), sec = s%60; return m+':'+String(sec).padStart(2,'0'); }
+
+// ═══════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════
+function getUsers(){ return JSON.parse(localStorage.getItem('fuerza_users') || '{}'); }
+function saveUsers(u){ localStorage.setItem('fuerza_users', JSON.stringify(u)); }
+
+document.getElementById('btnRegister').addEventListener('click', ()=>{
+  const name = document.getElementById('authUser').value.trim();
+  const pass = document.getElementById('authPass').value.trim();
+  const err = document.getElementById('authError');
+  if(!name||!pass){ err.textContent = t('errorFillAll'); return; }
+  const users = getUsers();
+  if(users[name]){ err.textContent = t('errorUserExists'); return; }
+  users[name] = { pass, lang: document.getElementById('authLang').value, created: new Date().toISOString() };
+  saveUsers(users);
+  err.style.color = '#22c55e';
+  err.textContent = t('errorRegistered');
+  err.style.color = '';
+});
+
+document.getElementById('btnLogin').addEventListener('click', ()=>{
+  const name = document.getElementById('authUser').value.trim();
+  const pass = document.getElementById('authPass').value.trim();
+  const err = document.getElementById('authError');
+  if(!name||!pass){ err.textContent = t('errorFillAll'); return; }
+  const users = getUsers();
+  if(!users[name]){ err.textContent = t('errorUserNotFound'); return; }
+  if(users[name].pass !== pass){ err.textContent = t('errorWrongPass'); return; }
+  login(name, users[name]);
+});
+
+function login(name, userData){
+  currentUser = name;
+  LANG = userData.lang || 'es';
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appScreen').classList.add('active');
+  document.getElementById('appUsername').textContent = name;
+  document.getElementById('settingLang').value = LANG;
+  document.getElementById('authUser').value = '';
+  document.getElementById('authPass').value = '';
+  document.getElementById('authError').textContent = '';
+
+  // Load settings
+  restSeconds = parseInt(loadData('restTime') || '90');
+  restRemaining = restSeconds;
+  document.getElementById('restTimer').textContent = fmtTime(restSeconds);
+  document.getElementById('settingRestTime').value = String(restSeconds);
+  const savedKey = loadData('apiKey');
+  if(savedKey) document.getElementById('settingApiKey').value = savedKey;
+
+  refreshLang();
+  renderExercises();
+  updateBodyHighlights();
+  renderActiveWorkout();
+  updateFinishBtn();
+  calYear = new Date().getFullYear();
+  calMonth = new Date().getMonth() + 1;
+  renderCalendar();
+}
+
+function refreshLang(){
+  document.getElementById('authSubtitle').textContent = t('authSubtitle');
+  document.getElementById('btnLogin').textContent = t('login');
+  document.getElementById('btnRegister').textContent = t('register');
+  document.getElementById('authUser').placeholder = t('username');
+  document.getElementById('authPass').placeholder = t('password');
+  document.getElementById('tabWorkout').textContent = t('tabWorkout');
+  document.getElementById('tabHistory').textContent = t('tabHistory');
+  document.getElementById('tabSettings').textContent = t('tabSettings');
+  document.getElementById('lblRest').textContent = t('lblRest');
+  document.getElementById('lblTotal').textContent = t('lblTotal');
+  document.getElementById('btnRestStart').textContent = t('btnRestStart');
+  document.getElementById('btnRestReset').textContent = t('btnRestReset');
+  document.getElementById('btnFinish').textContent = activeWorkout.length ? t('finish') : t('finishDisabled');
+  document.getElementById('fTodos').textContent = t('filterAll');
+  document.getElementById('sectLang').textContent = t('sectLang');
+  document.getElementById('sectData').textContent = t('sectData');
+  document.getElementById('sectWorkout').textContent = t('sectWorkout');
+  document.getElementById('lblSwitchLang').textContent = t('lblSwitchLang');
+  document.getElementById('hintSwitchLang').textContent = t('hintSwitchLang');
+  document.getElementById('hintApiKey').textContent = t('hintApiKey');
+  document.getElementById('lblRestTime').textContent = t('lblRestTime');
+  document.getElementById('lblExportAll').textContent = t('lblExportAll');
+  document.getElementById('hintExportAll').textContent = t('hintExportAll');
+  document.getElementById('lblClearData').textContent = t('lblClearData');
+  document.getElementById('hintClearData').textContent = t('hintClearData');
+  document.getElementById('lblLogout').textContent = t('lblLogout');
+  document.getElementById('btnExportData').textContent = t('btnExportData');
+  document.getElementById('btnClearData').textContent = t('btnClearData');
+  document.getElementById('lblTrained').textContent = t('trained');
+  document.getElementById('lblToday').textContent = t('today');
+
+  // Update filter chips
+  document.querySelectorAll('#filterParts .filter-chip').forEach(btn => {
+    const p = btn.dataset.part;
+    if(p === 'todos') btn.textContent = t('filterAll');
+    else btn.textContent = tBody(p);
+  });
+  document.querySelectorAll('#filterEquip .filter-chip').forEach(btn => {
+    const e = btn.dataset.equip;
+    if(e === 'todos') btn.textContent = t('filterAllEquip');
+    else btn.textContent = tEquip(e);
+  });
+
+  renderExercises();
+  renderActiveWorkout();
+  renderCalendar();
+}
+
+// ═══════════════════════════════════════════
+//  BODY MODEL
+// ═══════════════════════════════════════════
+function updateBodyHighlights(){
+  const usedParts = new Set();
+  activeWorkout.forEach(aw => {
+    const ex = EXERCISES.find(e => e.id === aw.id);
+    if(ex) usedParts.add(ex.part);
+  });
+
+  document.querySelectorAll('.body-part').forEach(el => {
+    el.classList.remove('active', 'highlight');
+    const part = el.dataset.part;
+    if(part === 'none') return;
+    if(usedParts.has(part)) el.classList.add('highlight');
+    if(filterPart !== 'todos' && part === filterPart) el.classList.add('active');
+  });
+}
+
+document.querySelectorAll('.body-part').forEach(el => {
+  el.addEventListener('click', ()=>{
+    const part = el.dataset.part;
+    if(part === 'none') return;
+    filterPart = part;
+    filterEquip = 'todos';
+    updateFilterChips();
+    updateBodyHighlights();
+    renderExercises();
+  });
+});
+
+// ═══════════════════════════════════════════
+//  FILTERS
+// ═══════════════════════════════════════════
+function updateFilterChips(){
+  document.querySelectorAll('#filterParts .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.part === filterPart));
+  document.querySelectorAll('#filterEquip .filter-chip').forEach(b => b.classList.toggle('active', b.dataset.equip === filterEquip));
+}
+
+document.getElementById('filterParts').addEventListener('click', e => {
+  if(!e.target.classList.contains('filter-chip')) return;
+  filterPart = e.target.dataset.part;
+  updateFilterChips();
+  updateBodyHighlights();
+  renderExercises();
+});
+
+document.getElementById('filterEquip').addEventListener('click', e => {
+  if(!e.target.classList.contains('filter-chip')) return;
+  filterEquip = e.target.dataset.equip;
+  updateFilterChips();
+  renderExercises();
+});
+
+// ═══════════════════════════════════════════
+//  EXERCISE LIST
+// ═══════════════════════════════════════════
+function renderExercises(){
+  const list = document.getElementById('exerciseList');
+  let filtered = EXERCISES;
+  if(filterPart !== 'todos') filtered = filtered.filter(e => e.part === filterPart);
+  if(filterEquip !== 'todos') filtered = filtered.filter(e => e.equip === filterEquip);
+
+  if(!filtered.length){
+    list.innerHTML = '<div style="text-align:center;color:#484f58;padding:24px">'+t('noExercises')+'</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(e => {
+    const added = activeWorkout.find(aw => aw.id === e.id);
+    const cls = added ? 'selected' : '';
+    return `
+      <div class="exercise-item ${cls}" data-id="${e.id}">
+        <span class="ex-name">${exName(e)}</span>
+        <span class="ex-meta">
+          <span>${tBody(e.part)}</span>
+          <span>·</span>
+          <span>${tEquip(e.equip)}</span>
+        </span>
+        <span class="ex-add">${added ? '✓' : '+'}</span>
+      </div>`;
+  }).join('');
+
+  // Click handlers
+  list.querySelectorAll('.exercise-item').forEach(item => {
+    item.addEventListener('click', ()=>{
+      const id = item.dataset.id;
+      const idx = activeWorkout.findIndex(aw => aw.id === id);
+      if(idx >= 0){
+        activeWorkout.splice(idx, 1);
+      } else {
+        activeWorkout.push({ id, sets: [{weight: '', reps: ''}] });
+      }
+      updateBodyHighlights();
+      renderExercises();
+      renderActiveWorkout();
+      updateFinishBtn();
+    });
+  });
+}
+
+// ═══════════════════════════════════════════
+//  ACTIVE WORKOUT
+// ═══════════════════════════════════════════
+function renderActiveWorkout(){
+  const container = document.getElementById('activeWorkout');
+  if(!activeWorkout.length){ container.innerHTML = ''; return; }
+
+  container.innerHTML = activeWorkout.map((aw, awIdx) => {
+    const ex = EXERCISES.find(e => e.id === aw.id);
+    const totalVol = aw.sets.reduce((sum, s) => sum + (parseFloat(s.weight)||0)*(parseInt(s.reps)||0), 0);
+    return `
+      <div class="active-exercise">
+        <div class="ae-header">
+          <div>
+            <div class="ae-name">${exName(ex)}</div>
+            <div style="font-size:11px;color:#8b949e">${tBody(ex.part)} · ${tEquip(ex.equip)}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="ae-volume">${totalVol} kg</span>
+            <button class="ae-remove" data-remove="${awIdx}">${t('remove')}</button>
+          </div>
+        </div>
+        <div class="ae-body">
+          ${aw.sets.map((s, sIdx) => `
+            <div class="set-row">
+              <span class="set-label">${t('set')} ${sIdx+1}</span>
+              <input class="set-input" type="number" placeholder="${t('kg')}" value="${s.weight||''}"
+                data-aw="${awIdx}" data-si="${sIdx}" data-field="weight" min="0" step="0.5">
+              <span style="color:#8b949e;font-size:11px">${t('kg')}</span>
+              <span style="color:#8b949e;font-size:11px">×</span>
+              <input class="set-input small" type="number" placeholder="${t('reps')}" value="${s.reps||''}"
+                data-aw="${awIdx}" data-si="${sIdx}" data-field="reps" min="0">
+              <span style="color:#8b949e;font-size:11px">${t('reps')}</span>
+              <span class="set-vol">${(parseFloat(s.weight)||0)*(parseInt(s.reps)||0)} kg</span>
+              <button style="background:none;border:none;color:#484f58;cursor:pointer;font-size:14px;padding:2px 4px"
+                data-del="${awIdx}" data-dsi="${sIdx}">×</button>
+            </div>
+          `).join('')}
+          <button class="btn-add-set" data-addset="${awIdx}">${t('addSet')}</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Event bindings
+  container.querySelectorAll('.ae-remove').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      activeWorkout.splice(parseInt(btn.dataset.remove), 1);
+      updateBodyHighlights();
+      renderExercises();
+      renderActiveWorkout();
+      updateFinishBtn();
+    });
+  });
+
+  container.querySelectorAll('[data-addset]').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      activeWorkout[parseInt(btn.dataset.addset)].sets.push({weight:'',reps:''});
+      renderActiveWorkout();
+    });
+  });
+
+  container.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', ()=>{
+      const awI = parseInt(btn.dataset.del);
+      const sI = parseInt(btn.dataset.dsi);
+      if(activeWorkout[awI].sets.length > 1){
+        activeWorkout[awI].sets.splice(sI, 1);
+        renderActiveWorkout();
+      }
+    });
+  });
+
+  container.querySelectorAll('.set-input').forEach(input => {
+    input.addEventListener('input', ()=>{
+      const awI = parseInt(input.dataset.aw);
+      const sI = parseInt(input.dataset.si);
+      const field = input.dataset.field;
+      activeWorkout[awI].sets[sI][field] = input.value;
+      renderActiveWorkout();
+    });
+  });
+}
+
+function updateFinishBtn(){
+  const btn = document.getElementById('btnFinish');
+  btn.disabled = activeWorkout.length === 0;
+  btn.textContent = activeWorkout.length ? t('finish') : t('finishDisabled');
+}
+
+// ═══════════════════════════════════════════
+//  TIMERS
+// ═══════════════════════════════════════════
+function updateRestDisplay(){
+  document.getElementById('restTimer').textContent = fmtTime(restRemaining);
+  document.getElementById('restTimer').classList.toggle('resting', restInterval !== null);
+}
+
+document.getElementById('btnRestStart').addEventListener('click', ()=>{
+  if(restInterval){ clearInterval(restInterval); restInterval = null; document.getElementById('btnRestStart').textContent = t('btnRestStart'); }
+  else {
+    restInterval = setInterval(()=>{
+      restRemaining--;
+      updateRestDisplay();
+      if(restRemaining <= 0){
+        clearInterval(restInterval); restInterval = null;
+        restRemaining = restSeconds;
+        updateRestDisplay();
+        document.getElementById('btnRestStart').textContent = t('btnRestStart');
+        beep(880,0.15,0.1); setTimeout(()=>beep(1100,0.2,0.12),150);
+      }
+    }, 1000);
+    document.getElementById('btnRestStart').textContent = '⏸';
+  }
+  updateRestDisplay();
+});
+
+document.getElementById('btnRestReset').addEventListener('click', ()=>{
+  if(restInterval){ clearInterval(restInterval); restInterval = null; }
+  restRemaining = restSeconds;
+  updateRestDisplay();
+  document.getElementById('btnRestStart').textContent = t('btnRestStart');
+});
+
+document.getElementById('btnTotalToggle').addEventListener('click', ()=>{
+  if(totalInterval){ clearInterval(totalInterval); totalInterval = null; document.getElementById('btnTotalToggle').textContent = '▶'; }
+  else {
+    totalInterval = setInterval(()=>{
+      totalSeconds++;
+      document.getElementById('totalTimer').textContent = fmtTime(totalSeconds);
+    }, 1000);
+    document.getElementById('btnTotalToggle').textContent = '⏸';
+  }
+});
+
+document.getElementById('btnTotalReset').addEventListener('click', ()=>{
+  if(totalInterval){ clearInterval(totalInterval); totalInterval = null; }
+  totalSeconds = 0;
+  document.getElementById('totalTimer').textContent = '00:00';
+  document.getElementById('btnTotalToggle').textContent = '▶';
+});
+
+// ── Sound ──
+function beep(freq, dur, vol){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type='sine'; o.frequency.value=freq;
+    g.gain.value=vol; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(ctx.currentTime); o.stop(ctx.currentTime+dur);
+  }catch(e){}
+}
+
+// ═══════════════════════════════════════════
+//  FINISH WORKOUT → SAVE + AI
+// ═══════════════════════════════════════════
+document.getElementById('btnFinish').addEventListener('click', async ()=>{
+  if(!activeWorkout.length) return;
+
+  // Pause timers
+  if(totalInterval){ clearInterval(totalInterval); totalInterval = null; document.getElementById('btnTotalToggle').textContent = '▶'; }
+  if(restInterval){ clearInterval(restInterval); restInterval = null; document.getElementById('btnRestStart').textContent = t('btnRestStart'); }
+
+  const workout = {
+    date: new Date().toISOString(),
+    duration: totalSeconds,
+    exercises: activeWorkout.map(aw => {
+      const ex = EXERCISES.find(e => e.id === aw.id);
+      return {
+        id: aw.id,
+        nameEs: ex.es,
+        nameZh: ex.zh,
+        part: ex.part,
+        sets: aw.sets.map(s => ({weight:parseFloat(s.weight)||0, reps:parseInt(s.reps)||0})),
+        volume: aw.sets.reduce((sum,s)=>sum+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0), 0)
+      };
+    }),
+    totalVolume: activeWorkout.reduce((sum,aw)=>sum+aw.sets.reduce((s2,s)=>s2+(parseFloat(s.weight)||0)*(parseInt(s.reps)||0),0), 0)
+  };
+
+  // Save to history
+  const history = loadData('history') || [];
+  history.push(workout);
+  saveData('history', history);
+
+  // Reset
+  activeWorkout = [];
+  totalSeconds = 0;
+  document.getElementById('totalTimer').textContent = '00:00';
+  updateBodyHighlights();
+  renderExercises();
+  renderActiveWorkout();
+  updateFinishBtn();
+
+  // Show AI advice
+  await showAI(workout);
+
+  // Refresh calendar
+  renderCalendar();
+});
+
+// ═══════════════════════════════════════════
+//  AI (Gemini)
+// ═══════════════════════════════════════════
+async function showAI(workout){
+  const modal = document.getElementById('aiModal');
+  const content = document.getElementById('aiModalContent');
+  modal.style.display = 'flex';
+
+  const apiKey = document.getElementById('settingApiKey').value.trim() || loadData('apiKey') || '';
+
+  // Build summary
+  const exList = workout.exercises.map(e => {
+    return (LANG==='zh'?e.nameZh:e.nameEs) + ': ' + e.sets.map(s=>s.weight+'kg×'+s.reps).join(', ') + ' ('+e.volume+'kg)';
+  }).join('\n');
+
+  const prompt = LANG === 'zh' ?
+    `你是一位专业的健身教练和营养师。请根据以下训练数据给出建议：
+
+训练时长：${fmtTime(workout.duration)}
+训练动作：
+${exList}
+总训练容量：${workout.totalVolume} kg
+
+请给出：
+1. 训练建议（对本次训练的评价，动作选择、训练量是否合理，下次改进建议，2-3条）
+2. 饮食建议（训练后的营养补充，蛋白质摄入建议，1-2条）
+
+请用中文回答，简洁专业，每条建议不超过100字。` :
+    `Eres un entrenador personal y nutricionista profesional. Analiza este entrenamiento:
+
+Duración: ${fmtTime(workout.duration)}
+Ejercicios:
+${exList}
+Volumen total: ${workout.totalVolume} kg
+
+Da:
+1. Consejos de entrenamiento (evalúa selección de ejercicios, volumen; sugiere mejoras, 2-3 puntos)
+2. Consejos de nutrición (nutrición post-entreno, proteína, 1-2 puntos)
+
+Responde en español, sé conciso y profesional, máximo 100 palabras por consejo.`;
+
+  if(!apiKey){
+    content.innerHTML = `<h2>${t('aiTitle')}</h2><p>${t('aiNoKey')}</p>
+      <p style="font-size:13px;color:#8b949e">${LANG==='zh'?'训练已保存，可在设置中配置API密钥':'Entrenamiento guardado. Configura tu API key en Ajustes.'}</p>
+      <button class="btn-close" onclick="document.getElementById('aiModal').style.display='none'">${LANG==='zh'?'关闭':'Cerrar'}</button>`;
+    return;
+  }
+
+  content.innerHTML = `<h2>${t('aiTitle')}</h2><div class="loader"><div class="loader-dot"></div><div class="loader-dot"></div><div class="loader-dot"></div></div><p style="text-align:center;color:#8b949e">${t('aiLoading')}</p>`;
+
+  try {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        contents: [{parts: [{text: prompt}]}],
+        generationConfig: {temperature: 0.7, maxOutputTokens: 600}
+      })
+    });
+    const data = await resp.json();
+    if(data.error){ throw new Error(data.error.message); }
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || t('aiError');
+
+    // Parse sections
+    const parts = text.split(/\d+\.\s*(?:Consejos de entrenamiento|Consejos de nutrición|训练建议|饮食建议)/i);
+    let training='', nutrition='';
+    if(parts.length >= 2){
+      training = parts[1] || '';
+      nutrition = parts[2] || '';
+    } else {
+      training = text;
+    }
+
+    content.innerHTML = `
+      <h2>${t('aiTitle')}</h2>
+      <div class="ai-section"><h3>${t('aiTraining')}</h3><p>${(training||text).replace(/\n/g,'<br>')}</p></div>
+      <div class="ai-section"><h3>${t('aiNutrition')}</h3><p>${(nutrition||'').replace(/\n/g,'<br>')}</p></div>
+      <button class="btn-finish" style="margin-bottom:8px" id="btnExportImg">${t('btnExportImg')}</button>
+      <button class="btn-close" onclick="document.getElementById('aiModal').style.display='none'">${LANG==='zh'?'关闭':'Cerrar'}</button>`;
+
+    document.getElementById('btnExportImg').addEventListener('click', ()=>exportImage(workout));
+  } catch(e){
+    content.innerHTML = `<h2>${t('aiTitle')}</h2><p style="color:#f85149">${t('aiError')}: ${e.message}</p>
+      <button class="btn-finish" style="margin-bottom:8px" id="btnExportImg">${t('btnExportImg')}</button>
+      <button class="btn-close" onclick="document.getElementById('aiModal').style.display='none'">${LANG==='zh'?'关闭':'Cerrar'}</button>`;
+    document.getElementById('btnExportImg').addEventListener('click', ()=>exportImage(workout));
+  }
+}
+
+// ═══════════════════════════════════════════
+//  EXPORT IMAGE
+// ═══════════════════════════════════════════
+async function exportImage(workout){
+  const area = document.getElementById('exportArea');
+
+  // Build week stats
+  const history = loadData('history') || [];
+  const now = new Date();
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay() + 1); weekStart.setHours(0,0,0,0);
+  const weekWorkouts = history.filter(h => new Date(h.date) >= weekStart);
+  const weekDays = new Set(weekWorkouts.map(h => new Date(h.date).toDateString())).size;
+  const weekDuration = weekWorkouts.reduce((s,h)=>s+(h.duration||0), 0);
+  const weekVolume = weekWorkouts.reduce((s,h)=>s+(h.totalVolume||0), 0);
+
+  const isZh = LANG === 'zh';
+
+  area.innerHTML = `
+    <div style="padding:24px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;min-width:600px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+        <div style="font-family:'Courier New',monospace;font-size:18px;font-weight:800;color:#f59e0b">FUERZA</div>
+        <div style="color:#8b949e;font-size:13px">${now.toLocaleDateString(LANG==='zh'?'zh-CN':'es-ES')}</div>
+      </div>
+
+      <div style="display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+        <div style="flex:1;min-width:120px;background:#161b22;border-radius:10px;padding:14px;text-align:center;border:1px solid #21262d">
+          <div style="font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:1px">${isZh?'本次容量':'Volumen'}</div>
+          <div style="font-size:28px;font-weight:800;color:#f59e0b">${workout.totalVolume} <span style="font-size:14px;color:#8b949e">kg</span></div>
+        </div>
+        <div style="flex:1;min-width:120px;background:#161b22;border-radius:10px;padding:14px;text-align:center;border:1px solid #21262d">
+          <div style="font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:1px">${isZh?'本次时长':'Duración'}</div>
+          <div style="font-size:28px;font-weight:800">${fmtTime(workout.duration)}</div>
+        </div>
+        <div style="flex:1;min-width:120px;background:#161b22;border-radius:10px;padding:14px;text-align:center;border:1px solid #21262d">
+          <div style="font-size:10px;color:#8b949e;text-transform:uppercase;letter-spacing:1px">${isZh?'周训练天数':'Días semana'}</div>
+          <div style="font-size:28px;font-weight:800">${weekDays}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:250px">
+          <canvas id="chartVolume" width="300" height="200"></canvas>
+        </div>
+        <div style="flex:1;min-width:250px">
+          <canvas id="chartWeek" width="300" height="200"></canvas>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;font-size:10px;color:#30363d;text-align:center">Always Be Young · Fuerza</div>
+    </div>`;
+
+  // Wait for render
+  await new Promise(r => setTimeout(r, 200));
+
+  // Charts
+  const ctx1 = document.getElementById('chartVolume');
+  if(ctx1){
+    new Chart(ctx1, {
+      type: 'bar',
+      data: {
+        labels: workout.exercises.map(e => isZh?e.nameZh:e.nameEs),
+        datasets: [{
+          label: isZh?'容量 (kg)':'Volumen (kg)',
+          data: workout.exercises.map(e => e.volume),
+          backgroundColor: '#f59e0b',
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#8b949e', font: { size: 10 } } } },
+        scales: {
+          x: { ticks: { color: '#8b949e', font: { size: 9 }, maxRotation: 45 }, grid: { color: '#21262d' } },
+          y: { ticks: { color: '#8b949e', font: { size: 9 } }, grid: { color: '#21262d' } }
+        }
+      }
+    });
+  }
+
+  const ctx2 = document.getElementById('chartWeek');
+  if(ctx2){
+    new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: [isZh?'训练天数':'Días entrenados', isZh?'休息天数':'Días descanso'],
+        datasets: [{
+          data: [weekDays, 7-weekDays],
+          backgroundColor: ['#f59e0b', '#21262d'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#8b949e', font: { size: 10 } } },
+          title: { display: true, text: isZh?'本周训练':'Esta semana', color: '#e2e8f0', font: { size: 13 } }
+        }
+      }
+    });
+  }
+
+  await new Promise(r => setTimeout(r, 300));
+
+  try {
+    const canvas = await html2canvas(area, { backgroundColor: '#0d1117', scale: 2 });
+    const link = document.createElement('a');
+    link.download = `fuerza_${new Date().toISOString().slice(0,10)}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch(e){
+    alert('Export error: ' + e.message);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════
+function renderCalendar(){
+  const title = document.getElementById('calTitle');
+  const grid = document.getElementById('calGrid');
+
+  const months = LANG==='zh' ?
+    ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'] :
+    ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  title.textContent = months[calMonth-1] + ' ' + calYear;
+
+  // Day headers
+  const dayNames = LANG==='zh' ?
+    [t('monS'),t('tueS'),t('wedS'),t('thuS'),t('friS'),t('satS'),t('sunS')] :
+    [t('mon'),t('tue'),t('wed'),t('thu'),t('fri'),t('sat'),t('sun')];
+
+  grid.innerHTML = dayNames.map(d => `<div class="cal-day-header">${d}</div>`).join('');
+
+  // Get training days
+  const history = loadData('history') || [];
+  const trainedDays = new Set(history.map(h => new Date(h.date).toDateString()));
+
+  const firstDay = new Date(calYear, calMonth-1, 1).getDay(); // 0=Sun
+  const adjustedFirst = firstDay === 0 ? 6 : firstDay - 1; // Mon=0
+  const daysInMonth = new Date(calYear, calMonth, 0).getDate();
+  const today = new Date().toDateString();
+
+  // Previous month filler
+  const prevDays = new Date(calYear, calMonth-1, 0).getDate();
+  for(let i = adjustedFirst-1; i >= 0; i--){
+    const d = prevDays - i;
+    grid.innerHTML += `<div class="cal-day other">${d}</div>`;
+  }
+
+  // Current month
+  for(let d = 1; d <= daysInMonth; d++){
+    const dateStr = new Date(calYear, calMonth-1, d).toDateString();
+    let cls = 'cal-day';
+    if(trainedDays.has(dateStr)) cls += ' trained';
+    if(dateStr === today) cls += ' today';
+    grid.innerHTML += `<div class="cal-day ${cls}" data-date="${dateStr}">${d}</div>`;
+  }
+
+  // Click handlers
+  grid.querySelectorAll('.cal-day:not(.other)').forEach(day => {
+    day.addEventListener('click', ()=>{
+      showDayDetail(day.dataset.date);
+    });
+  });
+}
+
+document.getElementById('calPrev').addEventListener('click', ()=>{
+  calMonth--; if(calMonth<1){calMonth=12;calYear--;}
+  renderCalendar();
+});
+document.getElementById('calNext').addEventListener('click', ()=>{
+  calMonth++; if(calMonth>12){calMonth=1;calYear++;}
+  renderCalendar();
+});
+
+function showDayDetail(dateStr){
+  const history = loadData('history') || [];
+  const workouts = history.filter(h => new Date(h.date).toDateString() === dateStr);
+  const div = document.getElementById('dayDetail');
+
+  if(!workouts.length){
+    div.innerHTML = `<div class="day-detail"><p style="color:#8b949e">${t('noHistory')}</p></div>`;
+    return;
+  }
+
+  div.innerHTML = workouts.map((w,i) => `
+    <div class="day-detail">
+      <h3>${LANG==='zh'?'训练':'Entrenamiento'} ${workouts.length>1?i+1:''} — ${new Date(w.date).toLocaleTimeString(LANG==='zh'?'zh-CN':'es-ES', {hour:'2-digit',minute:'2-digit'})}</h3>
+      <div style="display:flex;gap:16px;margin-bottom:12px;font-size:13px;color:#8b949e">
+        <span>⏱ ${fmtTime(w.duration)}</span>
+        <span>📊 ${w.totalVolume} kg</span>
+      </div>
+      ${w.exercises.map(e => `
+        <div class="dd-exercise">
+          <div>
+            <div style="font-weight:600">${LANG==='zh'?e.nameZh:e.nameEs}</div>
+            <div style="font-size:11px;color:#8b949e">${e.sets.map(s=>s.weight+'kg×'+s.reps).join(', ')}</div>
+          </div>
+          <div style="font-weight:700;color:#f59e0b">${e.volume} kg</div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'history') renderCalendar();
+  });
+});
+
+// ═══════════════════════════════════════════
+//  SETTINGS
+// ═══════════════════════════════════════════
+document.getElementById('settingLang').addEventListener('change', (e)=>{
+  LANG = e.target.value;
+  saveData('lang', LANG);
+  // Update user lang
+  const users = getUsers();
+  if(users[currentUser]){ users[currentUser].lang = LANG; saveUsers(users); }
+  refreshLang();
+});
+document.getElementById('settingRestTime').addEventListener('change', (e)=>{
+  restSeconds = parseInt(e.target.value);
+  restRemaining = restSeconds;
+  saveData('restTime', String(restSeconds));
+  if(restInterval){ clearInterval(restInterval); restInterval = null; }
+  document.getElementById('restTimer').textContent = fmtTime(restSeconds);
+  document.getElementById('btnRestStart').textContent = t('btnRestStart');
+});
+document.getElementById('settingApiKey').addEventListener('input', function(){
+  saveData('apiKey', this.value.trim());
+});
+
+document.getElementById('btnExportData').addEventListener('click', ()=>{
+  const history = loadData('history') || [];
+  const blob = new Blob([JSON.stringify({user:currentUser,history},null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'fuerza_data_'+currentUser+'.json'; a.click();
+});
+
+document.getElementById('btnClearData').addEventListener('click', ()=>{
+  if(confirm(t('confirmClear'))){
+    saveData('history', []);
+    renderCalendar();
+    document.getElementById('dayDetail').innerHTML = '';
+  }
+});
+
+document.getElementById('btnLogout').addEventListener('click', ()=>{
+  if(totalInterval){ clearInterval(totalInterval); totalInterval = null; }
+  if(restInterval){ clearInterval(restInterval); restInterval = null; }
+  currentUser = null;
+  activeWorkout = [];
+  totalSeconds = 0;
+  document.getElementById('authScreen').style.display = '';
+  document.getElementById('appScreen').classList.remove('active');
+});
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+updateRestDisplay();
+document.getElementById('totalTimer').textContent = '00:00';
+
+// Auto-login if there's a last session (single-user convenience)
+const users = getUsers();
+const userNames = Object.keys(users);
+if(userNames.length === 1){
+  // Don't auto-fill password for security, just pre-fill username
+  document.getElementById('authUser').value = userNames[0];
+  document.getElementById('authLang').value = users[userNames[0]].lang || 'es';
+}
+</script>
+
+</body>
+</html>
