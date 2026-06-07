@@ -141,6 +141,18 @@
       color: #1a1a1a;
       animation: mini-bounce 0.8s ease infinite;
     }
+
+    /* ── ¿Qué Palo Uso? thumbnail ── */
+    .preview-palo{
+      background: #fff;
+      border: 1px solid #f0f0f0;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 6px;
+    }
+    .preview-palo .palo-dist{ font-size: 40px; font-weight: 900; color: #1a1a1a; line-height: 1 }
+    .preview-palo .palo-club{ font-size: 22px; font-weight: 800; color: #c2410c }
+    .preview-palo .palo-range{ font-size: 10px; color: #999 }
+
     @keyframes mini-bounce{
       0%,100%{transform:translateY(0)}
       50%{transform:translateY(-8px)}
@@ -227,6 +239,16 @@
         </div>
       </div>
       <span class="title">Sorteador de salidas al tee</span>
+    </a>
+
+    <!-- 🏌️ ¿Qué Palo Uso? -->
+    <a class="card" href="/quepalouso/" target="_blank" rel="noopener">
+      <div class="preview preview-palo">
+        <div class="palo-dist">140<span style="font-size:16px;font-weight:500;color:#999">m</span></div>
+        <div class="palo-club">Hierro 7</div>
+        <div class="palo-range">110 – 140 m</div>
+      </div>
+      <span class="title">Recomendador de palo de golf</span>
     </a>
 
   </div>

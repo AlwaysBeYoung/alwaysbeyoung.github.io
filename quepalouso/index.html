@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>¿Qué Palo Uso? — Always Be Young</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 16px;
+      color: #1a1a1a;
+      background: #fafaf8;
+      min-height: 100dvh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 24px 20px;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none; -webkit-user-select: none;
+    }
+
+    .back{
+      width: 100%; max-width: 480px;
+      font-family: 'Courier New', monospace;
+      font-size: 10px; color: #bbb; text-decoration: none;
+      letter-spacing: 0.5px; margin-bottom: 28px;
+    }
+    .back:hover{color:#666}
+
+    .main{width:100%;max-width:480px;display:flex;flex-direction:column;gap:24px}
+
+    /* ── Distance ── */
+    .dist-section{text-align:center}
+    .dist-label{font-size:13px;color:#999;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+    .dist-value{
+      font-size:72px;font-weight:900;letter-spacing:-0.03em;line-height:1;
+      font-variant-numeric:tabular-nums;transition:color 0.2s;
+    }
+    .dist-unit{font-size:20px;font-weight:500;color:#999;margin-left:2px}
+    .dist-stepper{display:flex;justify-content:center;align-items:center;gap:16px;margin-top:12px}
+    .btn-step{
+      width:48px;height:48px;border-radius:50%;border:1px solid #e0e0e0;
+      background:#fff;font-size:22px;font-weight:600;color:#1a1a1a;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      transition:all 0.12s;font-family:inherit;
+    }
+    .btn-step:active{background:#f5f5f5;transform:scale(0.95)}
+    .btn-step.long{width:56px;height:56px;font-size:18px;font-weight:700;border-radius:14px}
+    input[type=range]{
+      -webkit-appearance:none;width:100%;max-width:320px;height:6px;
+      border-radius:3px;background:#e8e8e8;outline:none;margin:8px 0;
+    }
+    input[type=range]::-webkit-slider-thumb{
+      -webkit-appearance:none;width:28px;height:28px;border-radius:50%;
+      background:#1a1a1a;cursor:pointer;border:none;
+    }
+
+    /* ── Conditions ── */
+    .conditions{
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;
+    }
+    .cond-group{
+      background:#fff;border:1px solid #e8e8e8;border-radius:12px;
+      padding:14px;display:flex;flex-direction:column;gap:8px;
+    }
+    .cond-label{
+      font-size:11px;color:#999;text-transform:uppercase;letter-spacing:0.05em;
+    }
+    .cond-options{display:flex;flex-wrap:wrap;gap:6px}
+    .cond-btn{
+      padding:7px 12px;border-radius:8px;border:1px solid #e8e8e8;
+      background:#fff;font-size:13px;font-weight:500;font-family:inherit;
+      color:#666;cursor:pointer;transition:all 0.15s;white-space:nowrap;
+    }
+    .cond-btn.selected{
+      background:#1a1a1a;color:#fff;border-color:#1a1a1a;
+    }
+    .cond-btn:active{transform:scale(0.96)}
+    .cond-btn.fuerte.selected{background:#b91c1c;border-color:#b91c1c}
+    .cond-btn.contra.selected{background:#b91c1c;border-color:#b91c1c}
+    .cond-btn.favor.selected{background:#15803d;border-color:#15803d}
+    .cond-btn.subida.selected{background:#c2410c;border-color:#c2410c}
+    .cond-btn.bajada.selected{background:#1d4ed8;border-color:#1d4ed8}
+
+    /* ── Result ── */
+    .result{
+      background:#fff;border:1px solid #e8e8e8;border-radius:16px;
+      padding:24px;text-align:center;
+      transition:all 0.3s ease;
+    }
+    .result-header{font-size:11px;color:#999;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+    .club-name{font-size:48px;font-weight:900;letter-spacing:-0.03em;line-height:1.1}
+    .club-range{font-size:14px;color:#999;margin-top:6px}
+    .adj-info{
+      margin-top:14px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+    }
+    .adj-chip{
+      font-size:12px;padding:4px 10px;border-radius:12px;
+      background:#f5f5f5;color:#666;font-weight:500;
+    }
+    .adj-chip.effect{background:#fff7ed;color:#c2410c}
+
+    /* ── Club grid (visual reference) ── */
+    .all-clubs{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+      margin-top:4px;
+    }
+    .club-dot{
+      padding:6px 4px;border-radius:6px;text-align:center;
+      font-size:10px;color:#ccc;font-weight:500;
+      transition:all 0.3s;
+    }
+    .club-dot.active{background:#1a1a1a;color:#fff}
+    .club-dot.near{background:#f0f0f0;color:#999}
+
+    @media(max-width:400px){
+      .dist-value{font-size:56px}
+      .club-name{font-size:36px}
+      .conditions{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+  <a href="/" class="back">← Always Be Young</a>
+
+  <div class="main">
+
+    <!-- Distance -->
+    <div class="dist-section">
+      <div class="dist-label">Distancia al centro del green</div>
+      <div>
+        <span class="dist-value" id="distVal">140</span>
+        <span class="dist-unit">m</span>
+      </div>
+      <div class="dist-stepper">
+        <button class="btn-step" id="down10">−10</button>
+        <button class="btn-step" id="down5">−5</button>
+        <button class="btn-step" id="up5">+5</button>
+        <button class="btn-step" id="up10">+10</button>
+      </div>
+      <input type="range" id="distSlider" min="30" max="280" value="140" step="5">
+    </div>
+
+    <!-- Wind + Slope -->
+    <div class="conditions">
+      <div class="cond-group">
+        <span class="cond-label">🌬️ Viento</span>
+        <div class="cond-options" id="windDir">
+          <button class="cond-btn" data-val="none">Sin viento</button>
+          <button class="cond-btn" data-val="contra">En contra</button>
+          <button class="cond-btn favor" data-val="favor">A favor</button>
+          <button class="cond-btn" data-val="lateral">Lateral</button>
+        </div>
+        <div class="cond-options" id="windStr">
+          <button class="cond-btn" data-val="suave">Suave</button>
+          <button class="cond-btn" data-val="moderado">Moderado</button>
+          <button class="cond-btn fuerte" data-val="fuerte">Fuerte</button>
+        </div>
+      </div>
+
+      <div class="cond-group">
+        <span class="cond-label">⛰️ Pendiente</span>
+        <div class="cond-options" id="slopeDir">
+          <button class="cond-btn" data-val="plano">Plano</button>
+          <button class="cond-btn subida" data-val="subida">Subida</button>
+          <button class="cond-btn bajada" data-val="bajada">Bajada</button>
+        </div>
+        <div class="cond-options" id="slopeDeg">
+          <button class="cond-btn" data-val="ligera">Ligera</button>
+          <button class="cond-btn" data-val="moderada">Moderada</button>
+          <button class="cond-btn" data-val="fuerte">Fuerte</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="result" id="result">
+      <div class="result-header">Palo recomendado</div>
+      <div class="club-name" id="clubName">Hierro 7</div>
+      <div class="club-range" id="clubRange">110 – 140 m</div>
+      <div class="adj-info" id="adjInfo">
+        <span class="adj-chip">Distancia efectiva: 140 m</span>
+      </div>
+    </div>
+
+    <!-- All clubs reference -->
+    <div class="all-clubs" id="allClubs"></div>
+
+  </div>
+
+  <script>
+    // ── Club data (min distance in meters for each club) ──
+    const CLUBS = [
+      { name:'Driver',       min:200, max:260, emoji:'🏌️' },
+      { name:'Madera 3',     min:180, max:220 },
+      { name:'Madera 5',     min:170, max:200 },
+      { name:'Híbrido',      min:160, max:195 },
+      { name:'Hierro 3',     min:150, max:185 },
+      { name:'Hierro 4',     min:140, max:175 },
+      { name:'Hierro 5',     min:130, max:165 },
+      { name:'Hierro 6',     min:120, max:155 },
+      { name:'Hierro 7',     min:110, max:145 },
+      { name:'Hierro 8',     min:100, max:135 },
+      { name:'Hierro 9',     min:90,  max:125 },
+      { name:'PW',           min:80,  max:115 },
+      { name:'GW',           min:70,  max:105 },
+      { name:'SW',           min:50,  max:85  },
+      { name:'LW',           min:30,  max:65  },
+    ];
+
+    // ── State ──
+    let distance = 140;
+    let windDir = 'none';
+    let windStr = 'suave';
+    let slopeDir = 'plano';
+    let slopeDeg = 'ligera';
+
+    // ── DOM ──
+    const distVal = document.getElementById('distVal');
+    const distSlider = document.getElementById('distSlider');
+    const clubName = document.getElementById('clubName');
+    const clubRange = document.getElementById('clubRange');
+    const adjInfo = document.getElementById('adjInfo');
+    const allClubs = document.getElementById('allClubs');
+
+    // ── Build club reference grid ──
+    function buildClubGrid(activeIdx){
+      allClubs.innerHTML = CLUBS.map((c,i) => {
+        let cls = 'club-dot';
+        if(i === activeIdx) cls += ' active';
+        else if(Math.abs(i - activeIdx) === 1) cls += ' near';
+        return `<span class="${cls}">${c.name}</span>`;
+      }).join('');
+    }
+
+    // ── Calculate effective distance ──
+    function getEffectiveDistance(){
+      let d = distance;
+
+      // Wind
+      const windFactor = { suave: 0.05, moderado: 0.10, fuerte: 0.18 };
+      const factor = windFactor[windStr] || 0;
+      if(windDir === 'contra') d = d * (1 + factor);      // headwind → need more distance
+      if(windDir === 'favor')  d = d * (1 - factor);       // tailwind → need less distance
+      // lateral → negligible distance effect
+
+      // Slope
+      const slopeFactor = { ligera: 0.05, moderada: 0.10, fuerte: 0.16 };
+      const sFactor = slopeFactor[slopeDeg] || 0;
+      if(slopeDir === 'subida') d = d * (1 + sFactor);     // uphill → need more
+      if(slopeDir === 'bajada') d = d * (1 - sFactor);     // downhill → need less
+
+      return Math.round(d);
+    }
+
+    // ── Find best club ──
+    function findClub(effDist){
+      let bestIdx = CLUBS.length - 1;
+      let bestScore = Infinity;
+
+      for(let i = 0; i < CLUBS.length; i++){
+        const c = CLUBS[i];
+        const mid = (c.min + c.max) / 2;
+        const score = Math.abs(effDist - mid);
+        // Penalize if outside range
+        if(effDist < c.min) {
+          // Too close for this club — check if there's a shorter club
+          continue; // skip, shorter clubs will match better
+        }
+        if(score < bestScore){
+          bestScore = score;
+          bestIdx = i;
+        }
+      }
+
+      // Double check: if effective distance is above max of best club and there's a longer one
+      if(effDist > CLUBS[bestIdx].max && bestIdx > 0){
+        // Check if the next longer club is a better fit
+        const longer = CLUBS[bestIdx - 1];
+        const longerMid = (longer.min + longer.max) / 2;
+        const currentMid = (CLUBS[bestIdx].min + CLUBS[bestIdx].max) / 2;
+        if(Math.abs(effDist - longerMid) < Math.abs(effDist - currentMid)){
+          bestIdx = bestIdx - 1;
+        }
+      }
+
+      // If effective distance is below min of best club, check shorter
+      if(effDist < CLUBS[bestIdx].min && bestIdx < CLUBS.length - 1){
+        const shorter = CLUBS[bestIdx + 1];
+        const shorterMid = (shorter.min + shorter.max) / 2;
+        const currentMid = (CLUBS[bestIdx].min + CLUBS[bestIdx].max) / 2;
+        if(Math.abs(effDist - shorterMid) < Math.abs(effDist - currentMid)){
+          bestIdx = bestIdx + 1;
+        }
+      }
+
+      if(effDist > 260) bestIdx = 0;   // Driver max
+      if(effDist < 30) bestIdx = CLUBS.length - 1; // LW min
+
+      return bestIdx;
+    }
+
+    // ── Render ──
+    function update(){
+      distVal.textContent = distance;
+      distSlider.value = distance;
+
+      const eff = getEffectiveDistance();
+      const clubIdx = findClub(eff);
+      const club = CLUBS[clubIdx];
+
+      clubName.textContent = club.name;
+      clubRange.textContent = `${club.min} – ${club.max} m`;
+      buildClubGrid(clubIdx);
+
+      // Build adjustment chips
+      let html = `<span class="adj-chip">Distancia efectiva: ${eff} m</span>`;
+      if(windDir !== 'none'){
+        html += `<span class="adj-chip effect">${windDir==='contra'?'Contra':'A favor'} · ${windStr}</span>`;
+      }
+      if(slopeDir !== 'plano'){
+        html += `<span class="adj-chip effect">${slopeDir==='subida'?'Subida':'Bajada'} · ${slopeDeg}</span>`;
+      }
+      adjInfo.innerHTML = html;
+
+      // Color the distance based on adjustment
+      if(eff !== distance){
+        distVal.style.color = eff > distance ? '#c2410c' : '#1d4ed8';
+      } else {
+        distVal.style.color = '#1a1a1a';
+      }
+    }
+
+    // ── Event bindings ──
+    distSlider.addEventListener('input', () => {
+      distance = parseInt(distSlider.value);
+      update();
+    });
+
+    document.getElementById('down10').addEventListener('click', () => { distance = Math.max(30, distance-10); update(); });
+    document.getElementById('down5').addEventListener('click',  () => { distance = Math.max(30, distance-5); update(); });
+    document.getElementById('up5').addEventListener('click',   () => { distance = Math.min(280, distance+5); update(); });
+    document.getElementById('up10').addEventListener('click',  () => { distance = Math.min(280, distance+10); update(); });
+
+    // Wind direction
+    document.querySelectorAll('#windDir .cond-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#windDir .cond-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        windDir = btn.dataset.val;
+        update();
+      });
+    });
+
+    // Wind strength
+    document.querySelectorAll('#windStr .cond-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#windStr .cond-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        windStr = btn.dataset.val;
+        update();
+      });
+    });
+
+    // Slope direction
+    document.querySelectorAll('#slopeDir .cond-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#slopeDir .cond-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        slopeDir = btn.dataset.val;
+        update();
+      });
+    });
+
+    // Slope degree
+    document.querySelectorAll('#slopeDeg .cond-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#slopeDeg .cond-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        slopeDeg = btn.dataset.val;
+        update();
+      });
+    });
+
+    // ── Init ──
+    document.querySelector('#windDir [data-val="none"]').classList.add('selected');
+    document.querySelector('#windStr [data-val="suave"]').classList.add('selected');
+    document.querySelector('#slopeDir [data-val="plano"]').classList.add('selected');
+    document.querySelector('#slopeDeg [data-val="ligera"]').classList.add('selected');
+    update();
+  </script>
+
+</body>
+</html>
